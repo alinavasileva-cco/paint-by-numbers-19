@@ -51,6 +51,12 @@
       "regions": 778,
       "fit": 778,
       "unfit": 0
+    },
+    {
+      "source_detail_restoration": {
+        "eligible_source_islands": 0,
+        "restored_source_islands": 0
+      }
     }
   ],
   "status": "ALL_NUMBERED_BELOW_TARGET"
