@@ -390,9 +390,9 @@ def colored_proof_with_ink(image):
         ((619,460),(626,462),(632,457),2)
     ]
     for a,b,c,width in detail:
-        cv2.polylines(preview,[quad(a,b,c)],False,dark,width,cv2.LINE_AA)
-    cv2.ellipse(preview,(582,405),(3,5),0,0,360,dark,-1,cv2.LINE_AA)
-    cv2.ellipse(preview,(648,386),(2,4),0,0,360,dark,-1,cv2.LINE_AA)
+        cv2.polylines(preview,[quad(a,b,c)],False,dark,width,cv2.LINE_8)
+    cv2.ellipse(preview,(582,405),(3,5),0,0,360,dark,-1,cv2.LINE_8)
+    cv2.ellipse(preview,(648,386),(2,4),0,0,360,dark,-1,cv2.LINE_8)
     return preview
 
 
@@ -502,7 +502,11 @@ def create_final(source, out):
     colored = palette[pigments[ids]]
     Image.fromarray(colored).save(
         out/"color_segmentation_review.png",optimize=True)
-    Image.fromarray(colored_proof_with_ink(colored)).save(
+    artist_image = colored_proof_with_ink(colored)
+    artist_color_count = len(np.unique(artist_image.reshape(-1,3),axis=0))
+    if artist_color_count > 19:
+        raise AssertionError(f"Artist preview has {artist_color_count} colors (maximum 19)")
+    Image.fromarray(artist_image).save(
         out/"color_artist_preview.png",optimize=True)
     Image.fromarray(ids.astype(np.uint16)).save(out/"region_ids_16bit.png")
     with (out/"region_color_numbers.csv").open(
