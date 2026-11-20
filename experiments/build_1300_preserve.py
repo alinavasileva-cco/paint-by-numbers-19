@@ -214,7 +214,7 @@ def _number_stencil(number, px_to_mm):
     dr=ImageDraw.Draw(canvas)
     dr.text((2-bbox[0],2-bbox[1]),str(number),font=font,fill=255)
     ink=(np.asarray(canvas)>40).astype(np.uint8)
-    ink=cv2.dilate(ink,np.ones((3,3),np.uint8),iterations=1).astype(bool)
+    ink=cv2.dilate(ink,cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3)),iterations=1).astype(bool)
     return ink
 
 
