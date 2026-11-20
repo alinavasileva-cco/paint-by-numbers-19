@@ -22,6 +22,9 @@ jobs:
       - name: Trace original image and check labels
         run: |
           python scripts/build.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Artistically redraw to exactly 1000 fully numbered regions
+        run: |
+          python scripts/build_1000.py --source 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
       - name: Build side-by-side detail review sheets
         run: |
           python scripts/review_details.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
