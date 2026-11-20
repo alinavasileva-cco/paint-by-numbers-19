@@ -183,7 +183,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
     ordering = previous.palette_indices(palette)
     numbers = {c: i+1 for i,c in enumerate(ordering)}
     num_by_id = {i: numbers[int(color_of[i])] for i in range(1,n+1)}
-    _, area, positions, radii, dimensions = region_measure(
+    already_legible, area, positions, radii, dimensions = region_measure(
         ids, num_by_id, px_to_mm)
     reserved = np.zeros(ids.shape, dtype=bool)
     centers = np.zeros((n+1,2), dtype=np.int32)
@@ -194,7 +194,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
         yield int(x),int(y)
         # Displacement is restricted to the neighbourhood of the existing
         # paint region; curving its edge creates space for a readable number.
-        for radius in (6,12,19,27,37,49,64,82):
+        for radius in (6,12,19,27,37,49,64,82,108,142,178):
             for angle in range(16):
                 theta = 2*np.pi*angle/16
                 yield int(round(x+radius*np.cos(theta))),\
@@ -202,11 +202,11 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
 
     # Thin and tiny components get their label space before large easy ones.
     ordering_ids = sorted(range(1,n+1),
-                          key=lambda r: (area[r], radii[r-1]))
+                          key=lambda r: (not already_legible[r], area[r], radii[r-1]))
     for region in ordering_ids:
         x0,y0 = map(int,positions[region])
         rx,ry = dims[region]
-        pad_x,pad_y = rx+3,ry+3
+        pad_x,pad_y = (rx+1,ry+1) if already_legible[region] else (rx+2,ry+2)
         picked = None
         best_score = -1e12
         for cx,cy in candidate_positions(x0,y0):
@@ -241,9 +241,11 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
 
     # All slots are disjoint. Only now alter the geometry of painted regions.
     for r in range(1,n+1):
+        if already_legible[r]:
+            continue   # Keep the original contour; only redesign narrow shapes.
         cx,cy=map(int,centers[r])
         rx,ry=dims[r]
-        pad_x,pad_y=rx+3,ry+3
+        pad_x,pad_y=rx+2,ry+2
         yy,xx=np.ogrid[-pad_y:pad_y+1,-pad_x:pad_x+1]
         ellipse=(xx/(rx+2.5))**2+(yy/(ry+2.5))**2 <= 1
         # The glyph footprint is a rectangle; corners must also remain
