@@ -253,11 +253,19 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
                 ang=j*np.pi/10
                 yield round(x+radius*np.cos(ang)),round(y+radius*np.sin(ang))
 
+    region_boxes=ndi.find_objects(source_ids)
     for r in sorted(range(1,n+1),key=lambda z:(initial[z],areas[z])):
         x,y=map(int,positions[r])
         candidate=None
         best=-1e50
-        for cx,cy in samples(x,y):
+        def candidates():
+            yield from samples(x,y)
+            if areas[r] < 2500 and region_boxes[r-1] is not None:
+                box=region_boxes[r-1]
+                ry,rx=np.nonzero(source_ids[box]==r)
+                for yi,xi in zip(ry,rx):
+                    yield int(xi+box[1].start),int(yi+box[0].start)
+        for cx,cy in candidates():
             v=at(r,cx,cy)
             if v is None: continue
             x0,y0,glyph=v
