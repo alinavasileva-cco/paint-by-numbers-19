@@ -433,6 +433,7 @@ def create_final(source, out):
     xoff,yoff = (WIDTH_MM-mm_w)/2, (HEIGHT_MM-mm_h)/2
     colors = group_colors(base_ids, derived_colors, len(palette))
     ids, pigments = consolidate(base_ids, colors, palette, TARGET, px_to_mm)
+    merged_ids=ids.copy()
     ids, seed_centers, footprint_dims = repair_pockets(
         ids, pigments, palette, px_to_mm)
     ordering = previous.palette_indices(palette)
@@ -460,12 +461,21 @@ def create_final(source, out):
     protected_ink=np.logical_or(protected_girl,protected_eyes)
     protected_delta=np.count_nonzero(
         np.logical_and(pigments[ids]!=derived_colors,protected_ink))
+    protected_delta_before_pockets=int(np.count_nonzero(
+        np.logical_and(pigments[merged_ids]!=derived_colors,protected_ink)))
+    regions_altered_by_pockets=int(np.count_nonzero(
+        np.logical_and(merged_ids!=ids,protected_ink)))
     total_protected=int(protected_ink.sum())
+    print("ART AUDIT: foreground changed after merge",protected_delta_before_pockets,
+          "after number pockets",protected_delta,
+          "pixels reassigned by pockets",regions_altered_by_pockets,flush=True)
     report = {
         "source_sha256":hashlib.sha256(source_bytes).hexdigest(),
         "reference_regions":int(base_ids.max()),
         "protected_pixels_total":total_protected,
         "protected_pixels_changed":int(protected_delta),
+        "protected_changed_before_number_fit":protected_delta_before_pockets,
+        "pocket_reassigned_protected_pixels":regions_altered_by_pockets,
         "protected_changed_fraction":round(protected_delta/max(1,total_protected),6),
         "rendered_page_mm":[WIDTH_MM,HEIGHT_MM],
         "artwork_size_mm":[round(mm_w,3),round(mm_h,3)],
