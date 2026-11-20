@@ -406,8 +406,16 @@ def create_final(source, out):
     derived_png = np.asarray(
         Image.open(out / "color_segmentation_review.png").convert("RGB"))
     derived_colors = np.zeros(source_idx.shape, dtype=np.uint8)
+    pixel_has_color = np.zeros(source_idx.shape, dtype=bool)
     for color, rgb in enumerate(palette):
-        derived_colors[np.all(derived_png == rgb, axis=2)] = color
+        matching = np.all(derived_png == rgb, axis=2)
+        derived_colors[matching] = color
+        pixel_has_color |= matching
+    # Do not silently interpret an unknown RGB value as palette index zero.
+    missing_pigment_pixels = int(np.count_nonzero(~pixel_has_color))
+    if missing_pigment_pixels:
+        raise RuntimeError(
+            f"{missing_pigment_pixels} pixels have no original palette color")
     # Artistic revision: keep readable eyes instead of 100 decorative dots.
     derived_colors = restore_eyes_from_reference(derived_colors)
     base_ids, _, _ = previous.label_components(derived_colors,len(palette))
@@ -447,6 +455,10 @@ def create_final(source, out):
         "font_size_pt":FONT_PT,
         "regions_total":len(actual_ids),
         "regions_numbered":TARGET-len(missing),
+        "regions_without_number":len(missing),
+        "all_regions_numbered":bool(
+            not missing and len(actual_ids)==TARGET and
+            (TARGET-len(missing))==len(actual_ids)),
         "regions_require_manual_edit":len(missing),
         "source_not_overwritten": True,
         "source_colors": int(len(palette)),
@@ -455,16 +467,22 @@ def create_final(source, out):
         "actual_region_ids":len(actual_ids),
         "regions_with_legible_number":TARGET-len(missing),
         "regions_without_legible_number":len(missing),
+        "label_fit_passed_regions":int(np.count_nonzero(seed_valid[1:])),
+        "label_fit_failed_regions":int(np.count_nonzero(~seed_valid[1:])),
         "unlabelled_region_ids":missing[:100],
         "disconnected_region_ids":disconnected[:100],
         "pixels_without_assigned_region":coverage,
+        "pixels_without_color_assignment":missing_pigment_pixels+coverage,
         "font_pt":FONT_PT,
         "outline_mm":STROKE_MM,
         "page_mm":[WIDTH_MM,HEIGHT_MM],
         "artwork_mm":[round(mm_w,3),round(mm_h,3)],
-        "status":"PASS" if not missing and not disconnected and
-            not coverage and used_colors==19 and
-            len(actual_ids)==TARGET else "NEEDS_ARTISTIC_REVIEW",
+        "status":"PASS" if (
+            not missing and not disconnected and not coverage and
+            not missing_pigment_pixels and used_colors==19 and
+            len(actual_ids)==TARGET and
+            (TARGET-len(missing))==len(actual_ids)
+        ) else "NEEDS_ARTISTIC_REVIEW",
     }
     (out/"audit_1000.json").write_text(
         json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
