@@ -264,8 +264,9 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
             hh,ww=glyph.shape
             roi=source_ids[y0:y0+hh,x0:x0+ww]
             if not np.any(roi==r):continue
-            rr=reserved[y0-1:y0+hh+1,x0-1:x0+ww+1]
-            if np.any(rr):continue
+            rr=reserved[y0:y0+hh,x0:x0+ww]
+            # Separate the real numeral strokes, not whole empty text boxes.
+            if np.any(rr[glyph]):continue
             part=roi[glyph]
             original_count=np.count_nonzero(part==r)
             protected_changes=int(np.count_nonzero(
@@ -284,7 +285,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
         cx,cy,x0,y0,glyph=candidate
         centers[r]=(cx,cy)
         hh,ww=glyph.shape
-        reserved[y0-1:y0+hh+1,x0-1:x0+ww+1]=True
+        reserved[y0:y0+hh,x0:x0+ww] |= glyph
 
     # Reassign ONLY actual glyph/halo pixels, not their rectangular bounding
     # boxes or an enlarged ellipse around every small source fragment.
