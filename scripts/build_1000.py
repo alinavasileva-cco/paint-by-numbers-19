@@ -262,6 +262,14 @@ def create_final(source, out):
     used_colors = int(len(np.unique(pigments[ids])))
     report = {
         "source_sha256":hashlib.sha256(source_bytes).hexdigest(),
+        "rendered_page_mm":[WIDTH_MM,HEIGHT_MM],
+        "artwork_size_mm":[round(mm_w,3),round(mm_h,3)],
+        "source_distinct_colors":int(len(palette)),
+        "contour_width_mm":STROKE_MM,
+        "font_size_pt":FONT_PT,
+        "regions_total":len(actual_ids),
+        "regions_numbered":TARGET-len(missing),
+        "regions_require_manual_edit":len(missing),
         "source_not_overwritten": True,
         "source_colors": int(len(palette)),
         "colors_in_derived_image":used_colors,
