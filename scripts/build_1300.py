@@ -142,6 +142,75 @@ def merge_until_fit(indexed, palette, scale, max_rounds=14):
     return work,ids,colors,centers,numbers,history
 
 
+
+def recover_source_details(work, source_idx, palette, target=1300):
+    """Recover ONLY original 19-color regions that physically fit a number.
+
+    Each restored source-derived island must be entirely INSIDE a paintable
+    existing area (not a synthetic circle/stripe). Preserve protected girl's
+    meaningful details and close-up lamps, leave distant horizon simplified.
+    """
+    src_ids,src_colors,src_areas=previous.label_components(source_idx,len(palette))
+    src_ok,src_centers,_=fit_centers(src_ids,src_colors,palette,1.)
+    base_ids,base_colors,base_areas=previous.label_components(work,len(palette))
+    base_ok,base_centers,_=fit_centers(base_ids,base_colors,palette,1.)
+    blocked=np.zeros(work.shape,np.uint8)
+    for rid in range(1,len(base_colors)):
+        if base_ok[rid-1]:
+            x,y=base_centers[rid]
+            cv2.circle(blocked,(int(x),int(y)),7,1,-1)
+    boxes=ndi.find_objects(src_ids)
+    h,w=work.shape
+    choices=[]
+    for rid in range(1,len(src_colors)):
+        if not src_ok[rid-1]: continue
+        area=int(src_areas[rid])
+        if area<65 or area>7000:continue
+        x,y=map(int,src_centers[rid])
+        # Do not reintroduce noisy distant sky and remote water speckles.
+        foreground=(320<=y<=1160 and 215<=x<=780)
+        near_lamp=(600<=y<=1300 and (x<200 or x>740))
+        if not (foreground or near_lamp):continue
+        box=boxes[rid-1]
+        if box is None:continue
+        y0,y1=box[0].start,box[0].stop
+        x0,x1=box[1].start,box[1].stop
+        if min(y0,x0)<4 or y1>h-4 or x1>w-4:continue
+        ys=slice(y0-2,y1+2);xs=slice(x0-2,x1+2)
+        island=(src_ids[ys,xs]==rid)
+        if not island.any():continue
+        a,b=np.unique(base_ids[ys,xs][island],return_counts=True)
+        if not len(a):continue
+        parent=int(a[b.argmax()])
+        if int(b.max())/area<.985:continue
+        if int(src_colors[rid])==int(base_colors[parent]):continue
+        # A full two-pixel neighborhood must remain inside the parent.
+        outer=cv2.dilate(island.astype(np.uint8),
+            np.ones((5,5),np.uint8),iterations=1).astype(bool)
+        if not np.all(base_ids[ys,xs][outer]==parent):continue
+        if np.any(blocked[ys,xs][island]):continue
+        # Favor naturally shaped (not hairline) original design accents.
+        bw,bh=x1-x0,y1-y0
+        if min(bw,bh)<7 or area/max(1,bw*bh)<.08:continue
+        # In faces retain genuinely original iris/brow details, not flecks.
+        face=(340<=y<=510 and 470<=x<=665)
+        salience=(25 if face else 12 if (200<x<725 and y<985) else 0)
+        choices.append((salience+min(area,1800)/120,area,rid,ys,xs,island,parent))
+    choices.sort(reverse=True,key=lambda z:z[0])
+    restored=0
+    new=work.copy()
+    occupied=np.zeros(work.shape,np.uint8)
+    for _,area,rid,ys,xs,island,parent in choices:
+        if restored>=max(0,target-(len(base_colors)-1)):break
+        if np.any(occupied[ys,xs][island]):continue
+        # Candidate can only restore a real source island, not recolor arbitrary pixels.
+        if not np.all(new[ys,xs][island]==base_colors[parent]):continue
+        new[ys,xs][island]=int(src_colors[rid])
+        occupied[ys,xs][island]=1
+        restored+=1
+    return new,{'eligible_source_islands':len(choices),
+                'restored_source_islands':restored}
+
 def smooth_shared_paths(raw, scale):
     """Corner-round existing shared vectors once; no independent polygon borders."""
     import re
@@ -209,6 +278,16 @@ def build(source, out):
     wmm,hmm=width*scale,height*scale
     xoff,yoff=(PAGE[0]-wmm)/2,(PAGE[1]-hmm)/2
     output,ids,colors,centers,numbers,history=merge_until_fit(indexed,palette,scale)
+    # Reintroduce only real, originally present, full-size-numberable design
+    # details, mainly on the girl and foreground. No dotted label pockets.
+    original_idx=inverse.reshape(image.shape[:2]).astype(np.uint8)
+    recovered,restoration=recover_source_details(output,original_idx,palette,TARGET)
+    if restoration['restored_source_islands']:
+        output,ids,colors,centers,numbers,history2=merge_until_fit(
+            recovered,palette,scale)
+        history += [{'source_detail_restoration':restoration}]+history2
+    else:
+        history += [{'source_detail_restoration':restoration}]
     n=len(colors)-1
     valid,centers,numbers=fit_centers(ids,colors,palette,scale)
     disconnected=[]
