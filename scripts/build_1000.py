@@ -336,6 +336,36 @@ def check_number_footprints(ids,centers,dims):
     return passed
 
 
+def restore_eyes_from_reference(indexed):
+    """Replace illegible eye micro-islands with two clearly readable irises.
+
+    Only palette ID 16 (#F8A54E) is used; the surrounding facial silhouette,
+    hair, nose and garment stay based on the uploaded source artwork.
+    Eyelids, eye corners and mouth are printed as open detail strokes,
+    not falsely numbered paint areas.
+    """
+    rebuilt=indexed.copy()
+    # Two iris silhouettes in three-quarter view, consistent gaze.
+    cv2.ellipse(rebuilt, (581,405), (11,10), -7, 0, 360, 16,-1)
+    cv2.ellipse(rebuilt, (647,385), (7,11), 8, 0, 360, 16,-1)
+    return rebuilt
+
+
+def facial_ink_path(px_to_mm,xoff,yoff):
+    """Hand-placed non-enclosing 0.2 mm strokes along the ORIGINAL gaze."""
+    def p(x,y):
+        return f"{xoff+x*px_to_mm:.3f},{yoff+y*px_to_mm:.3f}"
+    # Both eyes are anime-like, but the distant eye is more foreshortened.
+    lines=[
+        f"M{p(551,401)} Q{p(576,379)} {p(602,393)}",
+        f"M{p(551,401)} Q{p(580,424)} {p(601,405)}",
+        f"M{p(636,387)} Q{p(646,369)} {p(654,380)}",
+        f"M{p(640,398)} Q{p(649,402)} {p(655,392)}",
+        f"M{p(619,460)} Q{p(626,462)} {p(632,457)}",
+    ]
+    return " ".join(lines)
+
+
 def create_final(source, out):
     source_bytes = source.read_bytes()
     src = np.asarray(Image.open(source).convert("RGB"))
@@ -348,7 +378,9 @@ def create_final(source, out):
     derived_colors = np.zeros(source_idx.shape, dtype=np.uint8)
     for color, rgb in enumerate(palette):
         derived_colors[np.all(derived_png == rgb, axis=2)] = color
-    base_ids = np.asarray(Image.open(out / "region_ids_16bit.png")).astype(np.int32)
+    # Artistic revision: keep readable eyes instead of 100 decorative dots.
+    derived_colors = restore_eyes_from_reference(derived_colors)
+    base_ids, _, _ = previous.label_components(derived_colors,len(palette))
     if np.any(base_ids == 0):
         raise AssertionError("Baseline regions contain unassigned pixels")
     h,w = base_ids.shape
@@ -419,7 +451,9 @@ def create_final(source, out):
         f'stroke-linejoin="round" stroke-linecap="round">\n'
         f'<rect x="{xoff:.3f}" y="{yoff:.3f}" '
         f'width="{mm_w:.3f}" height="{mm_h:.3f}"/>\n'
-        f'<path d="{path}"/></g>\n'
+        f'<path d="{path}"/>'
+        f'<path d="{facial_ink_path(px_to_mm,xoff,yoff)}" '
+        f'stroke-width="0.2"/></g>\n'
         f'<g font-family="DejaVu Sans" font-size="{FONT_MM:.5f}" '
         f'fill="#111" text-anchor="middle" dominant-baseline="central">\n'
     )
