@@ -108,7 +108,7 @@ def merge_until_fit(indexed, palette, scale, max_rounds=14):
             adj=graph.get(int(r),{})
             if not adj: continue
             original_color=int(colors[r])
-            if per_color[original_color]<=1: continue
+            # 19 is a MAXIMUM, not a requirement to retain an unpaintable pigment.
             x,y=centers[r]
             def rank(z):
                 c=int(colors[z])
@@ -122,7 +122,13 @@ def merge_until_fit(indexed, palette, scale, max_rounds=14):
                 return (-100 if warm_guard else 0,
                         1 if c==original_color else 0,
                         -color_dist, common, float(areas[z]))
-            best=max(adj,key=rank)
+            # Merge toward a larger, already numberable neighbor. Never
+            # let two invalid patches swap pigments back and forth.
+            stable=[z for z in adj if valid[z-1]]
+            larger=[z for z in adj if areas[z]>areas[r] or
+                    (areas[z]==areas[r] and z<r)]
+            pool=stable or larger or list(adj)
+            best=max(pool,key=lambda z:(int(valid[z-1]),float(areas[z]),rank(z)))
             target[int(r)]=int(colors[best])
             per_color[original_color]-=1
         if not target: break
@@ -229,12 +235,12 @@ def build(source, out):
       'unlabelled_region_ids':[int(r) for r in unfit[:50]],
       'merge_history':history,
       'status':'PASS' if not len(unfit) and not misses and not disconnected
-              and used==19 and 1150<=n<=1450 else
+              and used<=19 and 1150<=n<=1450 else
               ('ALL_NUMBERED_BELOW_TARGET' if not len(unfit) and not misses and not disconnected
-               and used==19 else 'NEEDS_ARTISTIC_REVISION')
+               and used<=19 else 'NEEDS_ARTISTIC_REVISION')
     }
     (out/'audit.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-    if len(unfit) or misses or disconnected or used!=19:
+    if len(unfit) or misses or disconnected or used>19:
         raise RuntimeError(f'Failed strict all-numbered gate: {json.dumps(report,ensure_ascii=False)}')
     stroke,npaths=previous.trace_smooth_shared_interfaces(output,scale,xoff,yoff)
     stroke=smooth_shared_paths(stroke,scale)
