@@ -22,6 +22,9 @@ jobs:
       - name: Trace original image and check labels
         run: |
           python scripts/build.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Build side-by-side detail review sheets
+        run: |
+          python scripts/review_details.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
       - name: Publish review files to repository
         run: |
           mkdir -p review
@@ -29,6 +32,7 @@ jobs:
           cp outputs/color_segmentation_review.png outputs/palette.csv review/
           cp outputs/audit.json outputs/region_ids_16bit.png review/
           cp outputs/region_color_numbers.csv review/
+          cp outputs/comparison_*.png review/
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add review/
