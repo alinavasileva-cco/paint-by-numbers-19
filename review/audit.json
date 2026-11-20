@@ -316,8 +316,8 @@
       "area_px": 14,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        956,
-        523
+        954,
+        522
       ]
     },
     {
@@ -757,8 +757,8 @@
       "area_px": 11,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        654,
-        380
+        655,
+        384
       ]
     },
     {
@@ -775,7 +775,7 @@
       "area_px": 4,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        328,
+        326,
         386
       ]
     },
@@ -802,8 +802,8 @@
       "area_px": 36,
       "max_clearance_px": 2.32,
       "approximate_position": [
-        657,
-        389
+        658,
+        390
       ]
     },
     {
@@ -811,8 +811,8 @@
       "area_px": 5,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        608,
-        391
+        606,
+        393
       ]
     },
     {
@@ -820,8 +820,8 @@
       "area_px": 6,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        661,
-        394
+        662,
+        393
       ]
     },
     {
@@ -830,7 +830,7 @@
       "max_clearance_px": 0.95,
       "approximate_position": [
         337,
-        397
+        396
       ]
     },
     {
@@ -838,8 +838,8 @@
       "area_px": 22,
       "max_clearance_px": 1.37,
       "approximate_position": [
-        591,
-        401
+        592,
+        403
       ]
     },
     {
@@ -857,7 +857,7 @@
       "max_clearance_px": 0.95,
       "approximate_position": [
         547,
-        408
+        407
       ]
     },
     {
@@ -884,7 +884,7 @@
       "max_clearance_px": 0.95,
       "approximate_position": [
         390,
-        414
+        415
       ]
     },
     {
@@ -892,7 +892,7 @@
       "area_px": 5,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        570,
+        571,
         410
       ]
     },
@@ -910,8 +910,8 @@
       "area_px": 6,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        553,
-        420
+        554,
+        418
       ]
     },
     {
@@ -919,8 +919,8 @@
       "area_px": 29,
       "max_clearance_px": 0.95,
       "approximate_position": [
-        501,
-        626
+        492,
+        635
       ]
     },
     {
@@ -928,8 +928,8 @@
       "area_px": 195,
       "max_clearance_px": 2.74,
       "approximate_position": [
-        390,
-        646
+        389,
+        647
       ]
     },
     {
@@ -956,7 +956,7 @@
       "max_clearance_px": 1.37,
       "approximate_position": [
         504,
-        704
+        703
       ]
     },
     {
@@ -964,8 +964,8 @@
       "area_px": 175,
       "max_clearance_px": 2.32,
       "approximate_position": [
-        497,
-        713
+        496,
+        714
       ]
     },
     {
@@ -973,8 +973,8 @@
       "area_px": 28,
       "max_clearance_px": 1.37,
       "approximate_position": [
-        383,
-        720
+        382,
+        719
       ]
     },
     {
@@ -992,7 +992,7 @@
       "max_clearance_px": 1.91,
       "approximate_position": [
         403,
-        783
+        781
       ]
     },
     {
@@ -1001,7 +1001,7 @@
       "max_clearance_px": 0.95,
       "approximate_position": [
         413,
-        810
+        808
       ]
     },
     {
