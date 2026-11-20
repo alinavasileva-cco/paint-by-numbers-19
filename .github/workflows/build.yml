@@ -11,7 +11,7 @@ jobs:
   build-outline:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,6 +22,20 @@ jobs:
       - name: Trace original image and check labels
         run: |
           python scripts/build.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Publish review files to repository
+        run: |
+          mkdir -p review
+          cp outputs/lineart_review.svg outputs/lineart_preview.png review/
+          cp outputs/color_segmentation_review.png outputs/palette.csv review/
+          cp outputs/audit.json outputs/region_ids_16bit.png review/
+          cp outputs/region_color_numbers.csv review/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review/
+          if ! git diff --cached --quiet; then
+            git commit -m "Update 19-color horizon review and pixel audit"
+            git push origin HEAD:main
+          fi
       - name: Upload review files
         uses: actions/upload-artifact@v4
         with:
