@@ -25,6 +25,8 @@ jobs:
           mkdir -p outputs
           cp review/color_segmentation_review.png outputs/color_segmentation_review.png
           python experiments/build_1300_preserve.py --source 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Build original vs. colored vs. numbered detail sheets
+        run: python scripts/review_details.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
       - name: Upload diagnostic or validated output
         if: always()
         uses: actions/upload-artifact@v4
@@ -36,7 +38,8 @@ jobs:
         if: success()
         run: |
           mkdir -p review_candidate_1300
-          cp outputs/lineart_review.svg outputs/lineart_preview.png review_candidate_1300/
+          cp outputs/lineart_review.svg outputs/lineart_preview.png outputs/lineart_screen.png review_candidate_1300/
+          cp outputs/comparison_*.png review_candidate_1300/
           cp outputs/color_segmentation_review.png outputs/color_artist_preview.png review_candidate_1300/
           cp outputs/region_ids_16bit.png outputs/region_color_numbers.csv review_candidate_1300/
           cp outputs/palette.csv outputs/audit.json review_candidate_1300/
