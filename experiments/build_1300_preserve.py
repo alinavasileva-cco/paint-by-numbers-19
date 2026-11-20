@@ -334,7 +334,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
                 if k==main:continue
                 orphan=(labels==k)
                 size=int(orphan.sum())
-                if size>25:continue
+                if size>400:continue
                 rim=cv2.dilate(orphan.astype(np.uint8),
                               np.ones((3,3),np.uint8),iterations=1).astype(bool)
                 other=sub[rim & ~orphan]
