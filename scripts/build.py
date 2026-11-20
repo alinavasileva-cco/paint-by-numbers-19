@@ -166,6 +166,157 @@ def simplify_horizon(indexed, ncolors, global_min=40,
     return work
 
 
+
+def art_directed_1500(base, original, palette):
+    """Refine a 2014-region review into ~1500 paintable regions.
+
+    The horizon and far water are simplified more strongly than the girl's
+    eyes and the blossom in her hair. All colors are original palette entries.
+    """
+    work = base.copy()
+    h, w = work.shape
+    ncolors = len(palette)
+    warm = np.asarray([
+        int(r) > 140 and int(r) > int(g) * .9
+        and int(r) > int(b) * 1.25
+        for r, g, b in palette
+    ], dtype=bool)
+    for _ in range(4):
+        ids, colors, sizes, centers = label_with_centers(work, ncolors)
+        xs, ys = centers[:, 0], centers[:, 1]
+        skyline = (ys < h * (240 / 1402)) | (
+            (ys < h * (495 / 1402)) &
+            ((xs < w * (270 / 1122)) | (xs > w * (800 / 1122))))
+        threshold = np.where(skyline, 275, 110)
+        # Retain small luminous windows and individual floating lanterns.
+        warm_area = (ys < h * (485 / 1402)) & warm[colors.clip(0)]
+        threshold[warm_area] = np.minimum(threshold[warm_area], 18)
+        small = np.flatnonzero(
+            (sizes < threshold) & (np.arange(len(sizes)) > 0))
+        if not len(small):
+            break
+        edge_pairs = []
+        for left, right in (
+            (ids[:, :-1], ids[:, 1:]), (ids[:-1], ids[1:])
+        ):
+            differs = left != right
+            aa, bb = left[differs], right[differs]
+            edge_pairs.append(np.stack(
+                (np.minimum(aa, bb), np.maximum(aa, bb)), axis=1))
+        pairs, shared = np.unique(
+            np.concatenate(edge_pairs), axis=0, return_counts=True)
+        adjacent = defaultdict(list)
+        for (a, b), length in zip(pairs, shared):
+            adjacent[int(a)].append((int(b), int(length)))
+            adjacent[int(b)].append((int(a), int(length)))
+        reassigned = colors.astype(np.uint8).copy()
+        for region in small:
+            neighbors = adjacent.get(int(region))
+            if not neighbors:
+                continue
+            best, _ = max(
+                neighbors,
+                key=lambda pair: (
+                    pair[1],
+                    sizes[pair[0]] >= threshold[pair[0]],
+                    sizes[pair[0]]))
+            reassigned[region] = colors[best]
+        work = reassigned[ids]
+
+    # The previous review lost the iris shape. Reintroduce the real
+    # detail from the uploaded original, after only a gentle cleanup.
+    fine = remove_speckles(
+        majority_filter(original, ncolors, 3), ncolors,
+        min_area=3, rounds=3)
+    protected = np.zeros(work.shape, dtype=np.uint8)
+    def protected_ellipse(cx, cy, rx, ry):
+        cv2.ellipse(
+            protected,
+            (round(cx * w / 1122), round(cy * h / 1402)),
+            (round(rx * w / 1122), round(ry * h / 1402)),
+            0, 0, 360, 255, -1)
+    protected_ellipse(580, 401, 38, 33)  # near eye
+    protected_ellipse(643, 386, 22, 30)  # far eye
+    protected_ellipse(361, 390, 38, 43)  # sakura hair ornament
+    work[protected > 0] = fine[protected > 0]
+    return work
+
+
+def trace_smooth_shared_interfaces(indexed, px_to_mm, xoff, yoff):
+    """Trace color boundaries ONCE as shared vector paths.
+
+    No repeated staircase segments. Junctions are pinned, and 1 px
+    contour simplification straightens roofs/lantern edges without
+    changing the per-pixel color assignment map.
+    """
+    height, width = indexed.shape
+    stride = width + 1
+    adjacency = defaultdict(list)
+    horizontal = np.argwhere(indexed[1:, :] != indexed[:-1, :])
+    vertical = np.argwhere(indexed[:, 1:] != indexed[:, :-1])
+    for y, x in horizontal:
+        a = int((y + 1) * stride + x)
+        b = a + 1
+        adjacency[a].append(b)
+        adjacency[b].append(a)
+    for y, x in vertical:
+        a = int(y * stride + x + 1)
+        b = a + stride
+        adjacency[a].append(b)
+        adjacency[b].append(a)
+    visited = set()
+    polylines = []
+    def walk(first, second):
+        chain = [first]
+        a, b = first, second
+        while True:
+            edge = (min(a, b), max(a, b))
+            if edge in visited:
+                break
+            visited.add(edge)
+            chain.append(b)
+            if len(adjacency[b]) != 2 or b == first:
+                break
+            neighbor = adjacency[b]
+            next_node = neighbor[0] if neighbor[0] != a else neighbor[1]
+            if (min(b, next_node), max(b, next_node)) in visited:
+                break
+            a, b = b, next_node
+        return chain
+    for start, neighbors in adjacency.items():
+        if len(neighbors) == 2:
+            continue
+        for next_node in neighbors:
+            if (min(start, next_node), max(start, next_node)) not in visited:
+                polylines.append(walk(start, next_node))
+    for start, neighbors in adjacency.items():
+        for next_node in neighbors:
+            if (min(start, next_node), max(start, next_node)) not in visited:
+                polylines.append(walk(start, next_node))
+    paths = []
+    for nodes in polylines:
+        if len(nodes) < 2:
+            continue
+        points = np.asarray(
+            [(i % stride, i // stride) for i in nodes],
+            dtype=np.float32)
+        closed = len(nodes) > 3 and nodes[0] == nodes[-1]
+        simplified = cv2.approxPolyDP(
+            points.reshape(-1, 1, 2), 1.0, closed).reshape(-1, 2)
+        if len(simplified) < 2:
+            continue
+        points_mm = [
+            (xoff + float(x) * px_to_mm, yoff + float(y) * px_to_mm)
+            for x, y in simplified]
+        path = f'M{points_mm[0][0]:.3f},{points_mm[0][1]:.3f}'
+        path += ''.join(
+            f'L{x:.3f},{y:.3f}' for x, y in points_mm[1:])
+        if closed:
+            path += 'Z'
+        paths.append(path)
+    return ' '.join(paths), len(paths)
+
+
 def palette_indices(palette):
     """Sort navy/violet -> burgundy/red -> orange -> yellow/cream."""
     hsv = cv2.cvtColor(
@@ -262,6 +413,7 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
         majority_filter(indexed, len(palette), majority),
         len(palette), min_area=minimum, rounds=rounds)
     simplified = simplify_horizon(simplified, len(palette))
+    simplified = art_directed_1500(simplified, indexed, palette)
     height, width = simplified.shape
     px_to_mm = min(
         PAGE_W_MM / width, PAGE_H_MM / height)
@@ -273,7 +425,7 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
     color_to_number = {
         color_id: number for number, color_id in
         enumerate(palette_sort, start=1)}
-    path, nsegments = outline_svg(
+    path, nsegments = trace_smooth_shared_interfaces(
         simplified, px_to_mm, offset_x, offset_y)
     numbers, failures, nregions, by_color = create_labels(
         simplified, color_to_number, px_to_mm,
@@ -366,6 +518,15 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
         },
         'every_pixel_assigned_to_one_of_19_colors': uncovered_pixels == 0,
         'pixels_without_color_assignment': uncovered_pixels,
+        'art_directed_pass': {
+            'goal_regions': 1500,
+            'horizon_threshold_px': 275,
+            'global_threshold_px': 110,
+            'rounds': 4,
+            'protected_landmarks': ['near_eye', 'far_eye', 'sakura_hairpin'],
+            'small_warm_lights_preserved': True,
+            'line_style': 'shared_contour_vector_simplification_1px'
+        },
         'regions_total': nregions,
         'regions_numbered': len(numbers),
         'regions_require_manual_edit': len(failures),
@@ -383,39 +544,12 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
     (dest / 'audit.json').write_text(
         json.dumps(report, ensure_ascii=False, indent=2),
         encoding='utf-8')
-    # Fast raster PROOF; the SVG has print-exact 0.2mm vectors.
-    preview_width, preview_height = 2400, 3600
-    scale = preview_width / PAGE_W_MM
-    art_w = round(drawing_w * scale)
-    art_h = round(drawing_h * scale)
-    x0 = round(offset_x * scale)
-    y0 = round(offset_y * scale)
-    scaled = cv2.resize(
-        simplified, (art_w, art_h),
-        interpolation=cv2.INTER_NEAREST)
-    grid = np.zeros((art_h, art_w), dtype=bool)
-    grid[:, 1:] |= (
-        scaled[:, 1:] != scaled[:, :-1])
-    grid[1:, :] |= (
-        scaled[1:, :] != scaled[:-1, :])
-    preview = np.full(
-        (preview_height, preview_width), 255,
-        dtype=np.uint8)
-    preview[y0:y0+art_h, x0:x0+art_w][grid] = 0
-    canvas = Image.fromarray(preview).convert('RGB')
-    draw = ImageDraw.Draw(canvas)
-    font_px = max(1, round(FONT_MM * scale))
-    try:
-        font = ImageFont.truetype(
-            'DejaVuSans.ttf', font_px)
-    except OSError:
-        font = ImageFont.load_default()
-    for value, mx, my in numbers:
-        draw.text((mx * scale, my * scale),
-                  str(value), anchor='mm',
-                  font=font, fill=(0, 0, 0))
-    canvas.save(
-        dest / 'lineart_preview.png', optimize=True)
+    # Raster preview is rendered FROM the vector so both look identical.
+    import cairosvg
+    cairosvg.svg2png(
+        url=str(dest / 'lineart_review.svg'),
+        write_to=str(dest / 'lineart_preview.png'),
+        output_width=2400, output_height=3600)
     print(json.dumps({
         key: report[key] for key in (
             'source_distinct_colors',
