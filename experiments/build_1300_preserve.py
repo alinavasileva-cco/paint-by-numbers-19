@@ -143,6 +143,11 @@ def consolidate(ids, color_of, palette, target, px_to_mm):
         score = (2.5 if valid[region] else 0.0) + \
                 min(1.0, clearance[region-1]/8) + \
                 min(1.0, np.log1p(areas[region])/9) + salience
+        # A 1px fleck must never survive as a numbered paint zone.
+        # Remove tiny fragments wherever they occur, including the face;
+        # keep the larger original silhouettes rather than inflating dots.
+        if areas[region] < 20:
+            score -= 100.0 - float(areas[region])
         cand.append((score, region))
     cand.sort()
     count_by_color = np.bincount(color_of[1:].astype(int), minlength=len(palette))
