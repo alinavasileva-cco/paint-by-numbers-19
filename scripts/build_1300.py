@@ -253,10 +253,50 @@ def smooth_shared_paths(raw, scale):
 
 
 def face_stroke(scale,xoff,yoff):
-    # Non-enclosing 0.2mm printed eye edges; not a separate paint pigment.
+    """Delicate original-composition eye/nose ink, not new paint regions.
+
+    Both eyes share the same gaze, distant eye is narrower in 3/4 view.
+    """
     def p(x,y):return f'{xoff+x*scale:.3f},{yoff+y*scale:.3f}'
-    return ('M'+p(636,385)+' Q'+p(645,372)+' '+p(653,382)
-            +' M'+p(639,395)+' Q'+p(646,400)+' '+p(653,393))
+    curves=[
+        ((551,401),(575,380),(602,392)),
+        ((552,402),(576,416),(600,401)),
+        ((567,392),(578,383),(589,394)),
+        ((570,405),(580,413),(590,403)),
+        ((635,385),(645,371),(655,383)),
+        ((639,395),(647,400),(654,393)),
+        ((618,457),(625,464),(634,458)),
+    ]
+    return ' '.join('M'+p(*a)+' Q'+p(*b)+' '+p(*c)
+                    for a,b,c in curves)
+
+
+def painted_ink_preview(flat,palette):
+    """Show printed anatomy strokes in the color proof.
+    Printed strokes are not independently numbered paint areas.
+    """
+    result=np.ascontiguousarray(flat.copy())
+    dark=tuple(int(z) for z in palette[np.argmin(
+        palette.astype(np.int32).sum(axis=1))])
+    def quadratic(a,b,c,count=28):
+        t=np.linspace(0,1,count)[:,None]
+        points=(1-t)**2*np.asarray(a)+2*(1-t)*t*np.asarray(b)+t**2*np.asarray(c)
+        return np.rint(points).astype(np.int32).reshape(-1,1,2)
+    strokes=[
+        ((551,401),(575,380),(602,392),2),
+        ((552,402),(576,416),(600,401),2),
+        ((567,392),(578,383),(589,394),1),
+        ((570,405),(580,413),(590,403),1),
+        ((635,385),(645,371),(655,383),2),
+        ((639,395),(647,400),(654,393),1),
+        ((618,457),(625,464),(634,458),1),
+    ]
+    for a,b,c,line_width in strokes:
+        cv2.polylines(result,[quadratic(a,b,c)],False,dark,
+                      line_width,cv2.LINE_8)
+    cv2.ellipse(result,(579,400),(4,6),0,0,360,dark,-1,cv2.LINE_8)
+    cv2.ellipse(result,(646,385),(3,5),0,0,360,dark,-1,cv2.LINE_8)
+    return result
 
 
 def build(source, out):
@@ -332,7 +372,9 @@ def build(source, out):
          f'<g fill="none" stroke="#171717" stroke-width="{STROKE_MM}" stroke-linecap="round" stroke-linejoin="round">',
          f'<rect x="{xoff:.3f}" y="{yoff:.3f}" width="{wmm:.3f}" height="{hmm:.3f}"/>',
          f'<path d="{stroke}"/>',
-         f'<path d="{face_stroke(scale,xoff,yoff)}" stroke-width="0.15"/>',
+         f'<path d="{face_stroke(scale,xoff,yoff)}" stroke-width="0.2"/>',
+         f'<ellipse cx="{xoff+579*scale:.3f}" cy="{yoff+400*scale:.3f}" rx="{4*scale:.3f}" ry="{6*scale:.3f}" fill="#171717" stroke="none"/>',
+         f'<ellipse cx="{xoff+646*scale:.3f}" cy="{yoff+385*scale:.3f}" rx="{3*scale:.3f}" ry="{5*scale:.3f}" fill="#171717" stroke="none"/>',
          '</g>',
          f'<g fill="#101010" font-family="DejaVu Sans" font-size="{font_mm:.5f}" text-anchor="middle" dominant-baseline="central">']
     for r in range(1,n+1):
@@ -342,7 +384,7 @@ def build(source, out):
     (out/'lineart_review.svg').write_text('\n'.join(xml),encoding='utf-8')
     flat=palette[output]
     Image.fromarray(flat).save(out/'color_segmentation_review.png',optimize=True)
-    Image.fromarray(flat).save(out/'color_artist_preview.png',optimize=True)
+    Image.fromarray(painted_ink_preview(flat,palette)).save(out/'color_artist_preview.png',optimize=True)
     Image.fromarray(ids.astype(np.uint16)).save(out/'region_ids_16bit.png')
     order=previous.palette_indices(palette)
     codes={c:k+1 for k,c in enumerate(order)}
