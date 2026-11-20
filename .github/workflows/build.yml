@@ -7,6 +7,9 @@ on:
       - 'scripts/**'
       - 'requirements.txt'
       - '.github/workflows/build.yml'
+concurrency:
+  group: paint-review-main
+  cancel-in-progress: true
 jobs:
   build-outline:
     runs-on: ubuntu-latest
@@ -32,7 +35,7 @@ jobs:
         run: |
           mkdir -p review
           cp outputs/lineart_review.svg outputs/lineart_preview.png review/
-          cp outputs/color_segmentation_review.png outputs/palette.csv review/
+          cp outputs/color_segmentation_review.png outputs/color_artist_preview.png outputs/palette.csv review/
           cp outputs/audit.json outputs/region_ids_16bit.png review/
           cp outputs/region_color_numbers.csv review/
           cp outputs/comparison_*.png review/
