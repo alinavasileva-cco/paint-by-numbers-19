@@ -543,19 +543,15 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
         },
         'regions_total': nregions,
         'regions_numbered': len(numbers),
-        'regions_without_number': nregions - len(numbers),
-        'all_regions_numbered': (
-            len(numbers) == nregions and not failures),
-        'label_fit_passed_regions': len(numbers),
-        'label_fit_failed_regions': len(failures),
         'regions_require_manual_edit': len(failures),
         'numbered_fraction': round(
             len(numbers) / nregions, 4),
         'outline_segments': nsegments,
         'by_color': by_color,
         'sample_unnumbered_areas': failures[:100],
-        'is_final_artifact': False,
-        'status': 'INTERMEDIATE_NOT_FINAL',
+        'status': (
+            'REVIEW_ONLY' if failures
+            else 'AUTO_NUMBERED_NEEDS_VISUAL_APPROVAL'),
         'note': (
             'Оригинал не перерисован. Это автоматическая '
             'схема для проверки, не финальный PDF.')}
