@@ -416,6 +416,48 @@ def colored_proof_with_ink(image):
     return preview
 
 
+def smooth_shared_paths(raw, scale):
+    """Corner-round existing shared vectors once; no independent polygon borders."""
+    import re
+    out=[]
+    for part in re.findall(r'M[^M]+',raw):
+        pairs=re.findall(r'[ML](-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)',part)
+        if len(pairs)<3:
+            out.append(part); continue
+        p=np.asarray([(float(x),float(y)) for x,y in pairs],float)
+        closed=part.strip().endswith('Z')
+        if closed and np.linalg.norm(p[0]-p[-1])<.002:p=p[:-1]
+        def coord(v):return f'{v[0]:.3f},{v[1]:.3f}'
+        if closed:
+            n=len(p)
+            if n<3:out.append(part);continue
+            v=p[0]-p[-1]; v=v/(np.linalg.norm(v)+1e-9)
+            q=p[1]-p[0]; q=q/(np.linalg.norm(q)+1e-9)
+            radius=min(1.*scale,.24*np.linalg.norm(p[0]-p[-1]),
+                       .24*np.linalg.norm(p[1]-p[0]))
+            commands=['M'+coord(p[0]-v*radius)]
+            indices=range(n)
+        else:
+            commands=['M'+coord(p[0])]
+            indices=range(1,len(p)-1)
+        for i in indices:
+            a,b,c=p[(i-1)%len(p)],p[i],p[(i+1)%len(p)]
+            left=b-a;right=c-b
+            d1=np.linalg.norm(left);d2=np.linalg.norm(right)
+            if min(d1,d2)<.00001:continue
+            v=left/d1; q=right/d2
+            dot=float(np.dot(v,q))
+            if dot>.95 or dot<-.97:
+                commands.append('L'+coord(b));continue
+            radius=min(1.*scale,.24*d1,.24*d2)
+            commands.append('L'+coord(b-v*radius)+'Q'+coord(b)+' '+coord(b+q*radius))
+        if closed:commands.append('Z')
+        else:commands.append('L'+coord(p[-1]))
+        out.append(''.join(commands))
+    return ' '.join(out)
+
+
+
 def create_final(source, out):
     source_bytes = source.read_bytes()
     src = np.asarray(Image.open(source).convert("RGB"))
@@ -535,6 +577,9 @@ def create_final(source, out):
         raise RuntimeError(json.dumps(report,ensure_ascii=False))
     path,nsegments = previous.trace_smooth_shared_interfaces(
         ids,px_to_mm,xoff,yoff)
+    # Shared interface geometry is rounded ONCE, preserving matching edges.
+    # This changes vector stroke appearance, not the original 19-color source.
+    path=smooth_shared_paths(path,px_to_mm)
     head = (
         f'<svg xmlns="http://www.w3.org/2000/svg" '
         f'width="400mm" height="600mm" viewBox="0 0 400 600">\n'
@@ -588,6 +633,10 @@ def create_final(source, out):
         url=str(out/"lineart_review.svg"),
         write_to=str(out/"lineart_preview.png"),
         output_width=2400,output_height=3600)
+    cairosvg.svg2png(
+        url=str(out/"lineart_review.svg"),
+        write_to=str(out/"lineart_screen.png"),
+        output_width=1100,output_height=1650)
     (out/"audit.json").write_text(
         json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps(report,ensure_ascii=False))
