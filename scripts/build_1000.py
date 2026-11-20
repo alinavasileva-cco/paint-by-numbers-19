@@ -126,6 +126,12 @@ def consolidate(ids, color_of, palette, target, px_to_mm):
         )
         if on_face_or_hair:
             salience += 1.5 if valid[region] else -20.0
+        on_kimono_flower = (
+            ((x-542)/105)**2 + ((y-660)/100)**2 < 1.0 or
+            ((x-385)/88)**2 + ((y-851)/112)**2 < 1.0
+        )
+        if on_kimono_flower:
+            salience += 0.5 if valid[region] else -7.0
         # Pixels that already fit a label have priority for retention.
         score = (2.5 if valid[region] else 0.0) + \
                 min(1.0, clearance[region-1]/8) + \
@@ -366,6 +372,30 @@ def facial_ink_path(px_to_mm,xoff,yoff):
     return " ".join(lines)
 
 
+def colored_proof_with_ink(image):
+    """Preview the PRINTED artistic ink lines without inventing a 20th paint."""
+    preview=np.ascontiguousarray(image.copy())
+    dark=(24,16,27)
+    def quad(a,b,c,n=25):
+        t=np.linspace(0,1,n)
+        p=(1-t)[:,None]**2*np.asarray(a)+\
+          2*((1-t)*t)[:,None]*np.asarray(b)+\
+          t[:,None]**2*np.asarray(c)
+        return np.round(p).astype(np.int32).reshape(-1,1,2)
+    detail=[
+        ((551,401),(576,379),(602,393),3),
+        ((552,400),(575,420),(601,405),2),
+        ((636,387),(646,369),(654,380),3),
+        ((639,395),(648,407),(655,394),2),
+        ((619,460),(626,462),(632,457),2)
+    ]
+    for a,b,c,width in detail:
+        cv2.polylines(preview,[quad(a,b,c)],False,dark,width,cv2.LINE_AA)
+    cv2.ellipse(preview,(582,405),(3,5),0,0,360,dark,-1,cv2.LINE_AA)
+    cv2.ellipse(preview,(648,386),(2,4),0,0,360,dark,-1,cv2.LINE_AA)
+    return preview
+
+
 def create_final(source, out):
     source_bytes = source.read_bytes()
     src = np.asarray(Image.open(source).convert("RGB"))
@@ -453,7 +483,12 @@ def create_final(source, out):
         f'width="{mm_w:.3f}" height="{mm_h:.3f}"/>\n'
         f'<path d="{path}"/>'
         f'<path d="{facial_ink_path(px_to_mm,xoff,yoff)}" '
-        f'stroke-width="0.2"/></g>\n'
+        f'stroke-width="0.2"/>'
+        f'<circle cx="{xoff+582*px_to_mm:.3f}" '
+        f'cy="{yoff+405*px_to_mm:.3f}" r="0.65" fill="#161616" stroke="none"/>'
+        f'<circle cx="{xoff+648*px_to_mm:.3f}" '
+        f'cy="{yoff+386*px_to_mm:.3f}" r="0.48" fill="#161616" stroke="none"/>'
+        f'</g>\n'
         f'<g font-family="DejaVu Sans" font-size="{FONT_MM:.5f}" '
         f'fill="#111" text-anchor="middle" dominant-baseline="central">\n'
     )
@@ -464,8 +499,11 @@ def create_final(source, out):
     ]
     (out/"lineart_review.svg").write_text(
         head+"".join(entries)+"</g></svg>",encoding="utf-8")
-    Image.fromarray(palette[pigments[ids]]).save(
+    colored = palette[pigments[ids]]
+    Image.fromarray(colored).save(
         out/"color_segmentation_review.png",optimize=True)
+    Image.fromarray(colored_proof_with_ink(colored)).save(
+        out/"color_artist_preview.png",optimize=True)
     Image.fromarray(ids.astype(np.uint16)).save(out/"region_ids_16bit.png")
     with (out/"region_color_numbers.csv").open(
             "w",newline="",encoding="utf-8-sig") as f:
