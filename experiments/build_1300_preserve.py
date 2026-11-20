@@ -13,7 +13,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from scipy import ndimage as ndi
 import cairosvg
 import sys
@@ -194,158 +194,148 @@ def consolidate(ids, color_of, palette, target, px_to_mm):
     return translate[ids], new_color
 
 
-def repair_pockets(ids, color_of, palette, px_to_mm):
-    """Reserve a non-overlapping 5.3pt label footprint for ALL 1000 areas.
 
-    Reconstruct a compact smooth label pocket *before* editing neighbors.
-    A region's reserved footprint can never be erased by a later edit.
+def _number_stencil(number, px_to_mm):
+    """Rasterize the ACTUAL 5.3pt letterforms and a one-pixel safety halo.
+
+    A stencil follows printed ink rather than inventing a large circular
+    paint island. SVG uses the exact 5.3pt font size at export.
     """
-    n = int(ids.max())
-    original = ids.copy()
-    ordering = previous.palette_indices(palette)
-    numbers = {c: i+1 for i,c in enumerate(ordering)}
-    num_by_id = {i: numbers[int(color_of[i])] for i in range(1,n+1)}
-    already_legible, area, positions, radii, dimensions = region_measure(
-        ids, num_by_id, px_to_mm)
-    reserved = np.zeros(ids.shape, dtype=bool)
-    centers = np.zeros((n+1,2), dtype=np.int32)
-    dims = {int(k):v for k,v in dimensions.items()}
-    h,w = ids.shape
+    pixel_size=max(6,int(np.ceil(FONT_MM/px_to_mm)))
+    font=ImageFont.truetype("DejaVuSans.ttf",pixel_size)
+    bbox=font.getbbox(str(number))
+    sw,sh=bbox[2]-bbox[0],bbox[3]-bbox[1]
+    canvas=Image.new("L",(sw+4,sh+4),0)
+    dr=ImageDraw.Draw(canvas)
+    dr.text((2-bbox[0],2-bbox[1]),str(number),font=font,fill=255)
+    ink=(np.asarray(canvas)>40).astype(np.uint8)
+    ink=cv2.dilate(ink,np.ones((3,3),np.uint8),iterations=1).astype(bool)
+    return ink
 
-    def candidate_positions(x,y):
-        yield int(x),int(y)
-        # Displacement is restricted to the neighbourhood of the existing
-        # paint region; curving its edge creates space for a readable number.
-        for radius in (6,12,19,27,37,49,64,82,108,142,178):
-            for angle in range(16):
-                theta = 2*np.pi*angle/16
-                yield int(round(x+radius*np.cos(theta))),\
-                      int(round(y+radius*np.sin(theta)))
 
-    # Thin and tiny components get their label space before large easy ones.
-    ordering_ids = sorted(range(1,n+1),
-                          key=lambda r: (not already_legible[r], area[r], radii[r-1]))
-    for region in ordering_ids:
-        x0,y0 = map(int,positions[region])
-        rx,ry = dims[region]
-        if already_legible[region]:
-            # This location already fits the real-size digit in the original
-            # area. Do NOT move a valid label without changing its contour.
-            cx,cy = x0,y0
-            if reserved[cy-ry:cy+ry+1,cx-rx:cx+rx+1].any():
-                raise RuntimeError(
-                    f"Previously legible slots collide at {region}")
-            centers[region] = (cx,cy)
-            reserved[cy-ry:cy+ry+1,cx-rx:cx+rx+1] = True
-            continue
-        pad_x,pad_y = rx+2,ry+2
-        picked = None
-        best_score = -1e12
-        for cx,cy in candidate_positions(x0,y0):
-            if (cx-pad_x < 0 or cy-pad_y < 0 or
-                cx+pad_x >= w or cy+pad_y >= h):
-                continue
-            occupied = reserved[cy-pad_y:cy+pad_y+1,
-                                cx-pad_x:cx+pad_x+1]
-            if occupied.any():
-                continue
-            patch = original[cy-pad_y:cy+pad_y+1,
-                             cx-pad_x:cx+pad_x+1]
-            overlap = np.count_nonzero(patch == region)
-            shift = np.hypot(cx-x0,cy-y0)
-            # The slot must meaningfully connect to the existing area
-            # wherever possible (not a detached floating number bubble).
-            score = overlap*4 - shift*.55
-            if patch[pad_y,pad_x] == region:
-                score += 45
-            if score > best_score:
-                best_score = score
-                picked = (cx,cy)
-                if np.all(patch == region):
-                    break
-        if picked is None:
-            raise RuntimeError(
-                f"No space for a nonoverlapping label slot in region {region}")
-        cx,cy = picked
-        centers[region] = (cx,cy)
-        reserved[cy-pad_y:cy+pad_y+1,
-                 cx-pad_x:cx+pad_x+1] = True
+def repair_pockets(ids, color_of, palette, px_to_mm):
+    """Fit real-sized printed numerals without creating circular label patches.
 
-    # All slots are disjoint. Only now alter the geometry of painted regions.
+    Reserves label positions before any pixel reassignment; gives priority
+    to nearby original-colored pixels and avoids protected drawing areas.
+    """
+    source_ids=ids.copy()
+    n=int(ids.max())
+    order=previous.palette_indices(palette)
+    numbers={c:i+1 for i,c in enumerate(order)}
+    by_region={r:numbers[int(color_of[r])] for r in range(1,n+1)}
+    initial,areas,positions,_,_=region_measure(ids,by_region,px_to_mm)
+    stencils={r:_number_stencil(by_region[r],px_to_mm) for r in range(1,n+1)}
+    reserved=np.zeros(ids.shape,bool)
+    centers=np.zeros((n+1,2),np.int32)
+    h,w=ids.shape
+    ys,xs=np.ogrid[:h,:w]
+    protect=(((xs-494)/252)**2+((ys-620)/455)**2<=1)
+    protect|=((xs>535)&(xs<675)&(ys>355)&(ys<485))
+
+    def at(r,cx,cy):
+        glyph=stencils[r]
+        hh,ww=glyph.shape
+        x0=cx-ww//2;y0=cy-hh//2
+        if x0<2 or y0<2 or x0+ww>=w-2 or y0+hh>=h-2:
+            return None
+        return x0,y0,glyph
+
+    def samples(x,y):
+        yield x,y
+        for radius in (5,9,14,21,29,41,56,78,105):
+            for j in range(20):
+                ang=j*np.pi/10
+                yield round(x+radius*np.cos(ang)),round(y+radius*np.sin(ang))
+
+    for r in sorted(range(1,n+1),key=lambda z:(not initial[z],areas[z])):
+        x,y=map(int,positions[r])
+        candidate=None
+        best=-1e50
+        for cx,cy in samples(x,y):
+            v=at(r,cx,cy)
+            if v is None: continue
+            x0,y0,glyph=v
+            hh,ww=glyph.shape
+            roi=source_ids[y0:y0+hh,x0:x0+ww]
+            if not np.any(roi==r):continue
+            rr=reserved[y0-1:y0+hh+1,x0-1:x0+ww+1]
+            if np.any(rr):continue
+            part=roi[glyph]
+            original_count=np.count_nonzero(part==r)
+            protected_changes=int(np.count_nonzero(
+                (part!=r)&protect[y0:y0+hh,x0:x0+ww][glyph]))
+            required_changes=int(np.count_nonzero(part!=r))
+            moved=np.hypot(cx-x,cy-y)
+            score=original_count*8-required_changes*3-protected_changes*8-moved*.18
+            if roi[hh//2,ww//2]==r:score+=15
+            if score>best:
+                best=score
+                candidate=(cx,cy,x0,y0,glyph)
+            if required_changes==0:
+                break
+        if candidate is None:
+            raise RuntimeError(f"No viable label stencil for cell {r}")
+        cx,cy,x0,y0,glyph=candidate
+        centers[r]=(cx,cy)
+        hh,ww=glyph.shape
+        reserved[y0-1:y0+hh+1,x0-1:x0+ww+1]=True
+
+    # Reassign ONLY actual glyph/halo pixels, not their rectangular bounding
+    # boxes or an enlarged ellipse around every small source fragment.
     for r in range(1,n+1):
-        if already_legible[r]:
-            continue   # Keep the original contour; only redesign narrow shapes.
         cx,cy=map(int,centers[r])
-        rx,ry=dims[r]
-        pad_x,pad_y=rx+2,ry+2
-        yy,xx=np.ogrid[-pad_y:pad_y+1,-pad_x:pad_x+1]
-        ellipse=(xx/(rx+2.5))**2+(yy/(ry+2.5))**2 <= 1
-        # The glyph footprint is a rectangle; corners must also remain
-        # inside the same paintable area after smoothing.
-        footprint=(abs(xx)<=rx)&(abs(yy)<=ry)
-        brush=ellipse|footprint
-        subsection=ids[cy-pad_y:cy+pad_y+1,cx-pad_x:cx+pad_x+1]
-        subsection[brush]=r
+        glyph=stencils[r]
+        hh,ww=glyph.shape
+        x0=cx-ww//2;y0=cy-hh//2
+        patch=ids[y0:y0+hh,x0:x0+ww]
+        patch[glyph]=r
 
-    # A label pocket can cross another region's thin bridge. Reassign
-    # resulting *orphan* fragments, retaining the component with its
-    # own number position. No region may be represented by two islands.
-    for pass_index in range(8):
-        detached = 0
+    # Large original art fragments cannot silently be recolored when a
+    # small ink halo grazes a narrow bridge. Only tiny orphan fragments
+    # can be merged; larger topology errors cause candidate rejection.
+    for _ in range(4):
+        detached=0
         boxes=ndi.find_objects(ids)
         for r in range(1,n+1):
             box=boxes[r-1]
-            if box is None:
-                raise RuntimeError(f"Seeded region {r} disappeared")
+            if box is None:continue
             sub=ids[box]
-            count, cc=cv2.connectedComponents(
+            count,labels=cv2.connectedComponents(
                 (sub==r).astype(np.uint8),connectivity=8)
-            if count<=2:
-                continue
-            x,y=map(int,centers[r])
-            key=int(cc[y-box[0].start,x-box[1].start])
-            if key == 0:
-                raise RuntimeError(f"Label seed lost for {r}")
-            for component in range(1,count):
-                if component==key:
-                    continue
-                orphan=(cc==component)
-                outline=cv2.dilate(orphan.astype(np.uint8),
-                    cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3)),
-                    iterations=1).astype(bool)
-                neighbors=sub[outline & (~orphan)]
-                neighbors=neighbors[(neighbors!=r)&(neighbors!=0)]
-                if len(neighbors)==0:
-                    continue
-                ids_unique, frequencies=np.unique(
-                    neighbors,return_counts=True)
-                pigment=int(color_of[r])
-                # Prefer a long shared boundary, then a nearby original hue.
-                colors=np.asarray([
-                    color_of[int(z)] for z in ids_unique],dtype=int)
-                rgb=np.asarray(palette).astype(float)
-                distances=np.linalg.norm(rgb[colors]-rgb[pigment],axis=1)
-                weight=frequencies/(1+distances/80)
-                chosen=int(ids_unique[np.argmax(weight)])
-                sub[orphan]=chosen
+            if count<=2:continue
+            cx,cy=map(int,centers[r])
+            main=int(labels[cy-box[0].start,cx-box[1].start])
+            if main==0:continue
+            for k in range(1,count):
+                if k==main:continue
+                orphan=(labels==k)
+                size=int(orphan.sum())
+                if size>25:continue
+                rim=cv2.dilate(orphan.astype(np.uint8),
+                              np.ones((3,3),np.uint8),iterations=1).astype(bool)
+                other=sub[rim & ~orphan]
+                other=other[(other!=r)&(other>0)]
+                if not other.size:continue
+                vals,nums=np.unique(other,return_counts=True)
+                target=int(vals[np.argmax(nums)])
+                sub[orphan]=target
                 detached+=1
-        if detached == 0:
-            break
+        if not detached:break
 
-    return ids, centers, dims
+    return ids,centers,stencils
 
 
-def check_number_footprints(ids,centers,dims):
-    """A number is legible only if its entire 5.3pt bounding box fits."""
-    passed = np.zeros(int(ids.max())+1,dtype=bool)
+def check_number_footprints(ids,centers,stencils):
+    passed=np.zeros(int(ids.max())+1,bool)
     for r in range(1,len(passed)):
-        x,y=map(int,centers[r])
-        rx,ry=dims[r]
-        if x-rx < 0 or y-ry < 0 or \
-           x+rx >= ids.shape[1] or y+ry >= ids.shape[0]:
+        cx,cy=map(int,centers[r])
+        glyph=stencils[r]
+        hh,ww=glyph.shape
+        x0=cx-ww//2;y0=cy-hh//2
+        if x0<0 or y0<0 or x0+ww>ids.shape[1] or y0+hh>ids.shape[0]:
             continue
-        patch=ids[y-ry:y+ry+1,x-rx:x+rx+1]
-        passed[r]=bool(np.all(patch==r))
+        passed[r]=bool(np.all(ids[y0:y0+hh,x0:x0+ww][glyph]==r))
     return passed
 
 
