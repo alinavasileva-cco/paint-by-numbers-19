@@ -206,7 +206,17 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
     for region in ordering_ids:
         x0,y0 = map(int,positions[region])
         rx,ry = dims[region]
-        pad_x,pad_y = (rx+1,ry+1) if already_legible[region] else (rx+2,ry+2)
+        if already_legible[region]:
+            # This location already fits the real-size digit in the original
+            # area. Do NOT move a valid label without changing its contour.
+            cx,cy = x0,y0
+            if reserved[cy-ry:cy+ry+1,cx-rx:cx+rx+1].any():
+                raise RuntimeError(
+                    f"Previously legible slots collide at {region}")
+            centers[region] = (cx,cy)
+            reserved[cy-ry:cy+ry+1,cx-rx:cx+rx+1] = True
+            continue
+        pad_x,pad_y = rx+2,ry+2
         picked = None
         best_score = -1e12
         for cx,cy in candidate_positions(x0,y0):
