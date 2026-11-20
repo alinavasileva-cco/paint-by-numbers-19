@@ -233,6 +233,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
     stencils={r:_number_stencil(by_region[r],px_to_mm) for r in range(1,n+1)}
     reserved=np.zeros(ids.shape,bool)
     centers=np.zeros((n+1,2),np.int32)
+    orientations=np.zeros(n+1,np.int16)
     h,w=ids.shape
     ys,xs=np.ogrid[:h,:w]
     protect=(((xs-494)/252)**2+((ys-620)/455)**2<=1)
@@ -265,33 +266,41 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
                 ry,rx=np.nonzero(source_ids[box]==r)
                 for yi,xi in zip(ry,rx):
                     yield int(xi+box[1].start),int(yi+box[0].start)
-        for cx,cy in candidates():
-            v=at(r,cx,cy)
-            if v is None: continue
-            x0,y0,glyph=v
-            hh,ww=glyph.shape
-            roi=source_ids[y0:y0+hh,x0:x0+ww]
-            if not np.any(roi==r):continue
-            rr=reserved[y0:y0+hh,x0:x0+ww]
-            # Separate the real numeral strokes, not whole empty text boxes.
-            if np.any(rr[glyph]):continue
-            part=roi[glyph]
-            original_count=np.count_nonzero(part==r)
-            protected_changes=int(np.count_nonzero(
-                (part!=r)&protect[y0:y0+hh,x0:x0+ww][glyph]))
-            required_changes=int(np.count_nonzero(part!=r))
-            moved=np.hypot(cx-x,cy-y)
-            score=original_count*8-required_changes*3-protected_changes*8-moved*.18
-            if roi[hh//2,ww//2]==r:score+=15
-            if score>best:
-                best=score
-                candidate=(cx,cy,x0,y0,glyph)
-            if required_changes==0:
+        original_glyph=stencils[r].copy()
+        chosen_angle=0
+        for angle,quarters in ((0,0),(-90,1),(90,3)):
+            stencils[r]=np.rot90(original_glyph,quarters)
+            for cx,cy in candidates():
+                v=at(r,cx,cy)
+                if v is None: continue
+                x0,y0,glyph=v
+                hh,ww=glyph.shape
+                roi=source_ids[y0:y0+hh,x0:x0+ww]
+                if not np.any(roi==r):continue
+                rr=reserved[y0:y0+hh,x0:x0+ww]
+                # Separate the real numeral strokes, not whole empty text boxes.
+                if np.any(rr[glyph]):continue
+                part=roi[glyph]
+                original_count=np.count_nonzero(part==r)
+                protected_changes=int(np.count_nonzero(
+                    (part!=r)&protect[y0:y0+hh,x0:x0+ww][glyph]))
+                required_changes=int(np.count_nonzero(part!=r))
+                moved=np.hypot(cx-x,cy-y)
+                score=original_count*8-required_changes*3-protected_changes*8-moved*.18
+                if roi[hh//2,ww//2]==r:score+=15
+                if score>best:
+                    best=score
+                    candidate=(cx,cy,x0,y0,glyph)
+                if required_changes==0:
+                    break
+            if candidate is not None:
+                chosen_angle=angle
                 break
         if candidate is None:
             raise RuntimeError(f"No viable label stencil for cell {r}, area={areas[r]}, center={x},{y}")
         cx,cy,x0,y0,glyph=candidate
         centers[r]=(cx,cy)
+        orientations[r]=chosen_angle
         hh,ww=glyph.shape
         reserved[y0:y0+hh,x0:x0+ww] |= glyph
 
@@ -337,7 +346,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
                 detached+=1
         if not detached:break
 
-    return ids,centers,stencils
+    return ids,centers,stencils,orientations
 
 
 def check_number_footprints(ids,centers,stencils):
@@ -438,7 +447,7 @@ def create_final(source, out):
     colors = group_colors(base_ids, derived_colors, len(palette))
     ids, pigments = consolidate(base_ids, colors, palette, TARGET, px_to_mm)
     merged_ids=ids.copy()
-    ids, seed_centers, footprint_dims = repair_pockets(
+    ids, seed_centers, footprint_dims, orientations = repair_pockets(
         ids, pigments, palette, px_to_mm)
     ordering = previous.palette_indices(palette)
     palette_no = {c:i+1 for i,c in enumerate(ordering)}
@@ -495,6 +504,7 @@ def create_final(source, out):
         "regions_require_manual_edit":len(missing),
         "source_not_overwritten": True,
         "source_colors": int(len(palette)),
+        "rotated_labels":int(np.count_nonzero(orientations)),
         "colors_in_derived_image":used_colors,
         "target_regions":TARGET,
         "actual_region_ids":len(actual_ids),
@@ -539,11 +549,14 @@ def create_final(source, out):
         f'<g font-family="DejaVu Sans" font-size="{FONT_MM:.5f}" '
         f'fill="#111" text-anchor="middle" dominant-baseline="central">\n'
     )
-    entries = [
-        f'<text x="{xoff+(seed_centers[r,0]+.5)*px_to_mm:.3f}" '
-        f'y="{yoff+(seed_centers[r,1]+.5)*px_to_mm:.3f}">{numbers[r]}</text>\n'
-        for r in range(1,TARGET+1)
-    ]
+    entries = []
+    for r in range(1,TARGET+1):
+        x=xoff+(seed_centers[r,0]+.5)*px_to_mm
+        y=yoff+(seed_centers[r,1]+.5)*px_to_mm
+        angle=int(orientations[r])
+        rotate=f' transform="rotate({angle} {x:.3f} {y:.3f})"' if angle else ''
+        entries.append(
+            f'<text x="{x:.3f}" y="{y:.3f}"{rotate}>{numbers[r]}</text>\\n')
     (out/"lineart_review.svg").write_text(
         head+"".join(entries)+"</g></svg>",encoding="utf-8")
     colored = palette[pigments[ids]]
