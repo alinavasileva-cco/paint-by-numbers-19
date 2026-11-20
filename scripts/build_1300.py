@@ -221,6 +221,9 @@ def build(source, out):
     used=int(np.unique(colors[1:]).size)
     report={
       'source_sha256':hashlib.sha256(raw).hexdigest(),
+      'rendered_page_mm':[PAGE[0],PAGE[1]],
+      'artwork_size_mm':[round(wmm,3),round(hmm,3)],
+      'source_dimensions_px':[width,height],
       'target_regions':TARGET, 'regions_total':n,
       'regions_numbered':int(valid.sum()),
       'regions_without_number':int(len(unfit)),
