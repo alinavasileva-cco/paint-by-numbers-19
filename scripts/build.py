@@ -95,6 +95,77 @@ def remove_speckles(indexed, ncolors, min_area=30, rounds=4):
     return work
 
 
+
+def label_with_centers(indexed, ncolors):
+    """Track the centroid of each full-color region (8-neighbor model)."""
+    ids = np.zeros(indexed.shape, dtype=np.int32)
+    region_colors = [-1]
+    sizes = [0]
+    centers = [(0.0, 0.0)]
+    for color in range(ncolors):
+        n, labs, stats, cent = cv2.connectedComponentsWithStats(
+            (indexed == color).astype(np.uint8), connectivity=8)
+        offset = len(sizes) - 1
+        present = labs > 0
+        ids[present] = labs[present] + offset
+        region_colors.extend([color] * (n - 1))
+        sizes.extend(stats[1:, cv2.CC_STAT_AREA].astype(int).tolist())
+        centers.extend(cent[1:].tolist())
+    return (ids, np.asarray(region_colors, dtype=np.int16),
+            np.asarray(sizes), np.asarray(centers))
+
+
+def simplify_horizon(indexed, ncolors, global_min=40,
+                     horizon_min=70, rounds=3):
+    """More cleanup along skyline; preserve the girl's face/kimono detail.
+
+    Thresholds are in original-image pixels (1122x1402 reference).
+    Each merged pixel is reassigned to one of the SAME input colors.
+    """
+    work = indexed.copy()
+    height, width = work.shape
+    for _ in range(rounds):
+        ids, colors, sizes, centers = label_with_centers(work, ncolors)
+        xs, ys = centers[:, 0], centers[:, 1]
+        far_distance = (ys < height * (230 / 1402))
+        side_sky = ((ys < height * (380 / 1402)) &
+                    ((xs < width * (265 / 1122)) |
+                     (xs > width * (790 / 1122))))
+        threshold = np.where(
+            far_distance | side_sky, horizon_min, global_min)
+        tiny = np.flatnonzero(
+            (sizes < threshold) & (np.arange(len(sizes)) > 0))
+        if not len(tiny):
+            break
+        edges = []
+        for a, b in ((ids[:, :-1], ids[:, 1:]),
+                     (ids[:-1, :], ids[1:, :])):
+            changed = a != b
+            low, high = a[changed], b[changed]
+            edges.append(np.stack(
+                (np.minimum(low, high), np.maximum(low, high)), axis=1))
+        pairs, shared = np.unique(
+            np.concatenate(edges), axis=0, return_counts=True)
+        contacts = defaultdict(list)
+        for (a, b), length in zip(pairs, shared):
+            contacts[int(a)].append((int(b), int(length)))
+            contacts[int(b)].append((int(a), int(length)))
+        assigned = colors.astype(np.uint8).copy()
+        for region in tiny:
+            adjacent = contacts.get(int(region), ())
+            if not adjacent:
+                continue
+            best, _ = max(
+                adjacent,
+                key=lambda item: (
+                    item[1],
+                    sizes[item[0]] >= threshold[item[0]],
+                    sizes[item[0]]))
+            assigned[region] = colors[best]
+        work = assigned[ids]
+    return work
+
+
 def palette_indices(palette):
     """Sort navy/violet -> burgundy/red -> orange -> yellow/cream."""
     hsv = cv2.cvtColor(
@@ -190,6 +261,7 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
     simplified = remove_speckles(
         majority_filter(indexed, len(palette), majority),
         len(palette), min_area=minimum, rounds=rounds)
+    simplified = simplify_horizon(simplified, len(palette))
     height, width = simplified.shape
     px_to_mm = min(
         PAGE_W_MM / width, PAGE_H_MM / height)
@@ -231,6 +303,31 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
         ''.join(parts), encoding='utf-8')
     Image.fromarray(palette[simplified]).save(
         dest / 'color_segmentation_review.png')
+    # Exact pixel-level assignment map: ZERO unassigned pixels.
+    # This is also a machine-readable reference when a 5.3pt number
+    # cannot physically fit inside a narrow print area.
+    region_ids, region_colors, region_areas = label_components(
+        simplified, len(palette))
+    uncovered_pixels = int(np.count_nonzero(region_ids == 0))
+    if uncovered_pixels:
+        raise AssertionError(
+            f'{uncovered_pixels} pixels have no region/color assignment')
+    if len(region_colors) > 65536:
+        raise ValueError('Too many regions for 16-bit region-id map')
+    Image.fromarray(region_ids.astype(np.uint16)).save(
+        dest / 'region_ids_16bit.png')
+    with (dest / 'region_color_numbers.csv').open(
+            'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            'region_id', 'color_number', 'hex', 'pixel_area'])
+        for rid in range(1, len(region_colors)):
+            original_color_id = int(region_colors[rid])
+            r, g, b = map(int, palette[original_color_id])
+            writer.writerow([
+                rid, color_to_number[original_color_id],
+                f'#{r:02X}{g:02X}{b:02X}', int(region_areas[rid])])
+
     with (dest / 'palette.csv').open(
         'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.writer(f)
@@ -260,6 +357,15 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
         'changed_pixels': changed,
         'changed_fraction': round(
             changed / indexed.size, 4),
+        'horizon_simplification': {
+            'global_min_area_px': 40,
+            'horizon_min_area_px': 70,
+            'rounds': 3,
+            'horizon_top_y_at_reference': 230,
+            'side_sky_to_y_at_reference': 380
+        },
+        'every_pixel_assigned_to_one_of_19_colors': uncovered_pixels == 0,
+        'pixels_without_color_assignment': uncovered_pixels,
         'regions_total': nregions,
         'regions_numbered': len(numbers),
         'regions_require_manual_edit': len(failures),
