@@ -1,0 +1,30 @@
+name: Build paint-by-numbers review
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'THE_CASE_*.png'
+      - 'scripts/**'
+      - 'requirements.txt'
+      - '.github/workflows/build.yml'
+jobs:
+  build-outline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install requirements
+        run: pip install -r requirements.txt
+      - name: Trace original image and check labels
+        run: |
+          python scripts/build.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Upload review files
+        uses: actions/upload-artifact@v4
+        with:
+          name: detailed-numbered-outline-review
+          path: outputs/
+          retention-days: 30
