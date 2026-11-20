@@ -248,7 +248,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
                 ang=j*np.pi/10
                 yield round(x+radius*np.cos(ang)),round(y+radius*np.sin(ang))
 
-    for r in sorted(range(1,n+1),key=lambda z:(not initial[z],areas[z])):
+    for r in sorted(range(1,n+1),key=lambda z:(initial[z],areas[z])):
         x,y=map(int,positions[r])
         candidate=None
         best=-1e50
@@ -275,7 +275,7 @@ def repair_pockets(ids, color_of, palette, px_to_mm):
             if required_changes==0:
                 break
         if candidate is None:
-            raise RuntimeError(f"No viable label stencil for cell {r}")
+            raise RuntimeError(f"No viable label stencil for cell {r}, area={areas[r]}, center={x},{y}")
         cx,cy,x0,y0,glyph=candidate
         centers[r]=(cx,cy)
         hh,ww=glyph.shape
