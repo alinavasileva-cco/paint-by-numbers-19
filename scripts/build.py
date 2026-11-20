@@ -187,7 +187,7 @@ def art_directed_1500(base, original, palette):
         skyline = (ys < h * (240 / 1402)) | (
             (ys < h * (495 / 1402)) &
             ((xs < w * (270 / 1122)) | (xs > w * (800 / 1122))))
-        threshold = np.where(skyline, 275, 110)
+        threshold = np.where(skyline, 336, 143)
         # Retain small luminous windows and individual floating lanterns.
         warm_area = (ys < h * (485 / 1402)) & warm[colors.clip(0)]
         threshold[warm_area] = np.minimum(threshold[warm_area], 18)
@@ -239,6 +239,20 @@ def art_directed_1500(base, original, palette):
     protected_ellipse(643, 386, 22, 30)  # far eye
     protected_ellipse(361, 390, 38, 43)  # sakura hair ornament
     work[protected > 0] = fine[protected > 0]
+    # Protect the structural petals and slender branches of the kimono.
+    flower_detail = remove_speckles(
+        majority_filter(original, ncolors, 3), ncolors,
+        min_area=8, rounds=3)
+    petal_mask = np.zeros(work.shape, dtype=np.uint8)
+    cv2.ellipse(petal_mask,
+        (round(542 * w / 1122), round(660 * h / 1402)),
+        (round(75 * w / 1122), round(80 * h / 1402)),
+        0, 0, 360, 255, -1)
+    cv2.ellipse(petal_mask,
+        (round(387 * w / 1122), round(851 * h / 1402)),
+        (round(65 * w / 1122), round(96 * h / 1402)),
+        0, 0, 360, 255, -1)
+    work[petal_mask > 0] = flower_detail[petal_mask > 0]
     return work
 
 
@@ -520,10 +534,10 @@ def build(source, dest, majority=3, minimum=30, rounds=4):
         'pixels_without_color_assignment': uncovered_pixels,
         'art_directed_pass': {
             'goal_regions': 1500,
-            'horizon_threshold_px': 275,
-            'global_threshold_px': 110,
+            'horizon_threshold_px': 336,
+            'global_threshold_px': 143,
             'rounds': 4,
-            'protected_landmarks': ['near_eye', 'far_eye', 'sakura_hairpin'],
+            'protected_landmarks': ['near_eye', 'far_eye', 'sakura_hairpin', 'kimono_shoulder', 'kimono_sleeve'],
             'small_warm_lights_preserved': True,
             'line_style': 'shared_contour_vector_simplification_1px'
         },
