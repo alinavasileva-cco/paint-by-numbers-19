@@ -117,6 +117,15 @@ def consolidate(ids, color_of, palette, target, px_to_mm):
             salience += 0.35
         if y < 240 and 140 < x < 1070:
             salience += 0.10  # key skyline details
+        # The face, eyes and hair ornament are illustration landmarks.
+        # Never inflate tiny unpaintable facial flecks into artificial dots:
+        # merge them with the closest matching parent color instead.
+        on_face_or_hair = (
+            ((x-552)/170)**2 + ((y-394)/172)**2 < 1.0 or
+            ((x-357)/75)**2 + ((y-387)/70)**2 < 1.0
+        )
+        if on_face_or_hair:
+            salience += 1.5 if valid[region] else -20.0
         # Pixels that already fit a label have priority for retention.
         score = (2.5 if valid[region] else 0.0) + \
                 min(1.0, clearance[region-1]/8) + \
