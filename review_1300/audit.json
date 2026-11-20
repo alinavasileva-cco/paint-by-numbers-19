@@ -8,36 +8,50 @@
     400.0,
     499.822
   ],
-  "source_distinct_colors": 19,
-  "contour_width_mm": 0.2,
-  "font_size_pt": 5.3,
-  "regions_total": 1300,
-  "regions_numbered": 1300,
+  "source_dimensions_px": [
+    1122,
+    1402
+  ],
+  "target_regions": 1300,
+  "regions_total": 778,
+  "regions_numbered": 778,
   "regions_without_number": 0,
   "all_regions_numbered": true,
-  "regions_require_manual_edit": 0,
-  "source_not_overwritten": true,
+  "label_fit_passed_regions": 778,
+  "label_fit_failed_regions": 0,
+  "pixels_without_color_assignment": 0,
   "source_colors": 19,
   "colors_in_derived_image": 19,
-  "target_regions": 1300,
-  "actual_region_ids": 1300,
-  "regions_with_legible_number": 1300,
-  "regions_without_legible_number": 0,
-  "label_fit_passed_regions": 1300,
-  "label_fit_failed_regions": 0,
-  "unlabelled_region_ids": [],
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "source_not_overwritten": true,
   "disconnected_region_ids": [],
-  "pixels_without_assigned_region": 0,
-  "pixels_without_color_assignment": 0,
-  "font_pt": 5.3,
-  "outline_mm": 0.2,
-  "page_mm": [
-    400.0,
-    600.0
+  "unlabelled_region_ids": [],
+  "merge_history": [
+    {
+      "round": 0,
+      "regions": 1501,
+      "fit": 802,
+      "unfit": 699
+    },
+    {
+      "round": 1,
+      "regions": 811,
+      "fit": 778,
+      "unfit": 33
+    },
+    {
+      "round": 2,
+      "regions": 779,
+      "fit": 778,
+      "unfit": 1
+    },
+    {
+      "round": 3,
+      "regions": 778,
+      "fit": 778,
+      "unfit": 0
+    }
   ],
-  "artwork_mm": [
-    400.0,
-    499.822
-  ],
-  "status": "PASS"
+  "status": "ALL_NUMBERED_BELOW_TARGET"
 }
