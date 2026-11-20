@@ -172,55 +172,147 @@ def consolidate(ids, color_of, palette, target, px_to_mm):
     return translate[ids], new_color
 
 
-def repair_pockets(ids, color_of, palette, px_to_mm, max_passes=6):
-    """Artistically widen remaining unnumberable color islands for 5.3pt labels.
+def repair_pockets(ids, color_of, palette, px_to_mm):
+    """Reserve a non-overlapping 5.3pt label footprint for ALL 1000 areas.
 
-    Every retained area gets a softly curved pocket, not a tiny printed digit.
-    Adjacent regions are kept connected; disconnected fragments are folded
-    into their adjacent dominant region before final audit.
+    Reconstruct a compact smooth label pocket *before* editing neighbors.
+    A region's reserved footprint can never be erased by a later edit.
     """
     n = int(ids.max())
+    original = ids.copy()
     ordering = previous.palette_indices(palette)
     numbers = {c: i+1 for i,c in enumerate(ordering)}
-    num_by_id = {i: numbers[int(color_of[i])] for i in range(1, n+1)}
-    for attempt in range(max_passes):
-        good, area, centers, maxima, dims = region_measure(
-            ids, num_by_id, px_to_mm)
-        missing = np.flatnonzero(~good[1:]) + 1
-        if not len(missing):
-            break
-        # Start from most fragile regions, so no small paint area vanishes.
-        missing = sorted(missing, key=lambda i: (area[i], maxima[i-1]))
-        protected = np.zeros(ids.shape, dtype=np.int32)
-        for r in range(1, n+1):
-            if good[r]:
-                x,y = centers[r]
-                rx,ry = dims[r]
-                protected[max(0,y-ry):y+ry+1,
-                          max(0,x-rx):x+rx+1] = r
-        before = ids.copy()
-        for r in missing:
-            x,y = map(int, centers[r])
-            rx,ry = dims[r]
-            pad_x,pad_y = rx+2, ry+2
-            if (x-pad_x < 0 or y-pad_y < 0 or
-                x+pad_x >= ids.shape[1] or y+pad_y >= ids.shape[0]):
-                # Re-center a border-touching island toward the page interior.
-                x = min(ids.shape[1]-pad_x-1, max(pad_x, x))
-                y = min(ids.shape[0]-pad_y-1, max(pad_y, y))
-            patch = ids[y-pad_y:y+pad_y+1, x-pad_x:x+pad_x+1]
-            guard = protected[y-pad_y:y+pad_y+1, x-pad_x:x+pad_x+1]
-            yy,xx = np.ogrid[-pad_y:pad_y+1,-pad_x:pad_x+1]
-            ell = ((xx/pad_x)**2+(yy/pad_y)**2) <= 1
-            touching = (guard != 0) & (guard != r) & ell
-            if np.any(touching):
-                # Don't overwrite a neighbor's already legible number.
+    num_by_id = {i: numbers[int(color_of[i])] for i in range(1,n+1)}
+    _, area, positions, radii, dimensions = region_measure(
+        ids, num_by_id, px_to_mm)
+    reserved = np.zeros(ids.shape, dtype=bool)
+    centers = np.zeros((n+1,2), dtype=np.int32)
+    dims = {int(k):v for k,v in dimensions.items()}
+    h,w = ids.shape
+
+    def candidate_positions(x,y):
+        yield int(x),int(y)
+        # Displacement is restricted to the neighbourhood of the existing
+        # paint region; curving its edge creates space for a readable number.
+        for radius in (6,12,19,27,37,49,64,82):
+            for angle in range(16):
+                theta = 2*np.pi*angle/16
+                yield int(round(x+radius*np.cos(theta))),\
+                      int(round(y+radius*np.sin(theta)))
+
+    # Thin and tiny components get their label space before large easy ones.
+    ordering_ids = sorted(range(1,n+1),
+                          key=lambda r: (area[r], radii[r-1]))
+    for region in ordering_ids:
+        x0,y0 = map(int,positions[region])
+        rx,ry = dims[region]
+        pad_x,pad_y = rx+3,ry+3
+        picked = None
+        best_score = -1e12
+        for cx,cy in candidate_positions(x0,y0):
+            if (cx-pad_x < 0 or cy-pad_y < 0 or
+                cx+pad_x >= w or cy+pad_y >= h):
                 continue
-            patch[ell] = r
-            protected[y-ry:y+ry+1,x-rx:x+rx+1] = r
-        if np.array_equal(before, ids):
+            occupied = reserved[cy-pad_y:cy+pad_y+1,
+                                cx-pad_x:cx+pad_x+1]
+            if occupied.any():
+                continue
+            patch = original[cy-pad_y:cy+pad_y+1,
+                             cx-pad_x:cx+pad_x+1]
+            overlap = np.count_nonzero(patch == region)
+            shift = np.hypot(cx-x0,cy-y0)
+            # The slot must meaningfully connect to the existing area
+            # wherever possible (not a detached floating number bubble).
+            score = overlap*4 - shift*.55
+            if patch[pad_y,pad_x] == region:
+                score += 45
+            if score > best_score:
+                best_score = score
+                picked = (cx,cy)
+                if np.all(patch == region):
+                    break
+        if picked is None:
+            raise RuntimeError(
+                f"No space for a nonoverlapping label slot in region {region}")
+        cx,cy = picked
+        centers[region] = (cx,cy)
+        reserved[cy-pad_y:cy+pad_y+1,
+                 cx-pad_x:cx+pad_x+1] = True
+
+    # All slots are disjoint. Only now alter the geometry of painted regions.
+    for r in range(1,n+1):
+        cx,cy=map(int,centers[r])
+        rx,ry=dims[r]
+        pad_x,pad_y=rx+3,ry+3
+        yy,xx=np.ogrid[-pad_y:pad_y+1,-pad_x:pad_x+1]
+        ellipse=(xx/(rx+2.5))**2+(yy/(ry+2.5))**2 <= 1
+        # The glyph footprint is a rectangle; corners must also remain
+        # inside the same paintable area after smoothing.
+        footprint=(abs(xx)<=rx)&(abs(yy)<=ry)
+        brush=ellipse|footprint
+        subsection=ids[cy-pad_y:cy+pad_y+1,cx-pad_x:cx+pad_x+1]
+        subsection[brush]=r
+
+    # A label pocket can cross another region's thin bridge. Reassign
+    # resulting *orphan* fragments, retaining the component with its
+    # own number position. No region may be represented by two islands.
+    for pass_index in range(8):
+        detached = 0
+        boxes=ndi.find_objects(ids)
+        for r in range(1,n+1):
+            box=boxes[r-1]
+            if box is None:
+                raise RuntimeError(f"Seeded region {r} disappeared")
+            sub=ids[box]
+            count, cc=cv2.connectedComponents(
+                (sub==r).astype(np.uint8),connectivity=8)
+            if count<=2:
+                continue
+            x,y=map(int,centers[r])
+            key=int(cc[y-box[0].start,x-box[1].start])
+            if key == 0:
+                raise RuntimeError(f"Label seed lost for {r}")
+            for component in range(1,count):
+                if component==key:
+                    continue
+                orphan=(cc==component)
+                outline=cv2.dilate(orphan.astype(np.uint8),
+                    cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3)),
+                    iterations=1).astype(bool)
+                neighbors=sub[outline & (~orphan)]
+                neighbors=neighbors[(neighbors!=r)&(neighbors!=0)]
+                if len(neighbors)==0:
+                    continue
+                ids_unique, frequencies=np.unique(
+                    neighbors,return_counts=True)
+                pigment=int(color_of[r])
+                # Prefer a long shared boundary, then a nearby original hue.
+                colors=np.asarray([
+                    color_of[int(z)] for z in ids_unique],dtype=int)
+                rgb=np.asarray(palette).astype(float)
+                distances=np.linalg.norm(rgb[colors]-rgb[pigment],axis=1)
+                weight=frequencies/(1+distances/80)
+                chosen=int(ids_unique[np.argmax(weight)])
+                sub[orphan]=chosen
+                detached+=1
+        if detached == 0:
             break
-    return ids
+
+    return ids, centers, dims
+
+
+def check_number_footprints(ids,centers,dims):
+    """A number is legible only if its entire 5.3pt bounding box fits."""
+    passed = np.zeros(int(ids.max())+1,dtype=bool)
+    for r in range(1,len(passed)):
+        x,y=map(int,centers[r])
+        rx,ry=dims[r]
+        if x-rx < 0 or y-ry < 0 or \
+           x+rx >= ids.shape[1] or y+ry >= ids.shape[0]:
+            continue
+        patch=ids[y-ry:y+ry+1,x-rx:x+rx+1]
+        passed[r]=bool(np.all(patch==r))
+    return passed
 
 
 def create_final(source, out):
@@ -244,7 +336,8 @@ def create_final(source, out):
     xoff,yoff = (WIDTH_MM-mm_w)/2, (HEIGHT_MM-mm_h)/2
     colors = group_colors(base_ids, derived_colors, len(palette))
     ids, pigments = consolidate(base_ids, colors, palette, TARGET, px_to_mm)
-    ids = repair_pockets(ids, pigments, palette, px_to_mm)
+    ids, seed_centers, footprint_dims = repair_pockets(
+        ids, pigments, palette, px_to_mm)
     ordering = previous.palette_indices(palette)
     palette_no = {c:i+1 for i,c in enumerate(ordering)}
     numbers = {r:palette_no[int(pigments[r])] for r in range(1,TARGET+1)}
@@ -257,7 +350,9 @@ def create_final(source, out):
         n,_ = cv2.connectedComponents((ids == r).astype(np.uint8),8)
         if n != 2:
             disconnected.append([int(r),n-1])
-    missing = [int(x) for x in range(1,TARGET+1) if not legible[x]]
+    seed_valid=check_number_footprints(
+        ids,seed_centers,footprint_dims)
+    missing = [int(x) for x in range(1,TARGET+1) if not seed_valid[x]]
     coverage = int(np.count_nonzero(ids == 0))
     used_colors = int(len(np.unique(pigments[ids])))
     report = {
@@ -308,8 +403,8 @@ def create_final(source, out):
         f'fill="#111" text-anchor="middle" dominant-baseline="central">\n'
     )
     entries = [
-        f'<text x="{xoff+(centers[r,0]+.5)*px_to_mm:.3f}" '
-        f'y="{yoff+(centers[r,1]+.5)*px_to_mm:.3f}">{numbers[r]}</text>\n'
+        f'<text x="{xoff+(seed_centers[r,0]+.5)*px_to_mm:.3f}" '
+        f'y="{yoff+(seed_centers[r,1]+.5)*px_to_mm:.3f}">{numbers[r]}</text>\n'
         for r in range(1,TARGET+1)
     ]
     (out/"lineart_review.svg").write_text(
