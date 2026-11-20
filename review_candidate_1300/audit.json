@@ -2,10 +2,10 @@
   "source_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
   "reference_regions": 1501,
   "protected_pixels_total": 360151,
-  "protected_pixels_changed": 4220,
+  "protected_pixels_changed": 4142,
   "protected_changed_before_number_fit": 1187,
-  "pocket_reassigned_protected_pixels": 3162,
-  "protected_changed_fraction": 0.011717,
+  "pocket_reassigned_protected_pixels": 3084,
+  "protected_changed_fraction": 0.011501,
   "rendered_page_mm": [
     400.0,
     600.0
