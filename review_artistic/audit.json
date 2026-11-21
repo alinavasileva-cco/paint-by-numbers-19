@@ -2,11 +2,11 @@
   "target_regions": "artistic_quality",
   "source_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
   "reference_regions": 1501,
-  "regions_total": 718,
-  "regions_numbered": 718,
+  "regions_total": 902,
+  "regions_numbered": 902,
   "regions_without_number": 0,
   "all_regions_numbered": true,
-  "label_fit_passed_regions": 718,
+  "label_fit_passed_regions": 902,
   "label_fit_failed_regions": 0,
   "pixels_without_color_assignment": 0,
   "disconnected_region_ids": [],
@@ -17,60 +17,55 @@
   "source_colors": 19,
   "source_not_overwritten": true,
   "nonpaint_decorative_ink": true,
+  "label_fitting_method": "5.3pt actual-font ink footprint, 1px halo",
+  "shared_vector_contours_softened": true,
   "artistic_visual_approval": "PENDING",
-  "changed_pixels": 76649,
-  "changed_pixels_in_foreground_face_and_kimono": 43194,
-  "changed_fraction_in_foreground_face_and_kimono": 0.041011,
-  "changed_pixels_in_background": 33455,
+  "changed_pixels": 36618,
+  "changed_pixels_in_foreground_face_and_kimono": 18792,
+  "changed_fraction_in_foreground_face_and_kimono": 0.017842,
+  "changed_pixels_in_background": 17826,
   "rounds": [
     {
       "before": 1501,
-      "after": 1029,
-      "bad_before": 784,
-      "merged": 588,
+      "after": 1129,
+      "bad_before": 591,
+      "merged": 443,
       "round": 1
     },
     {
-      "before": 1029,
-      "after": 824,
-      "bad_before": 301,
-      "merged": 225,
+      "before": 1129,
+      "after": 982,
+      "bad_before": 219,
+      "merged": 164,
       "round": 2
     },
     {
-      "before": 824,
-      "after": 749,
-      "bad_before": 100,
-      "merged": 75,
+      "before": 982,
+      "after": 929,
+      "bad_before": 75,
+      "merged": 56,
       "round": 3
     },
     {
-      "before": 749,
-      "after": 726,
-      "bad_before": 26,
-      "merged": 19,
+      "before": 929,
+      "after": 909,
+      "bad_before": 23,
+      "merged": 17,
       "round": 4
     },
     {
-      "before": 726,
-      "after": 720,
-      "bad_before": 7,
+      "before": 909,
+      "after": 902,
+      "bad_before": 5,
       "merged": 5,
       "round": 5
     },
     {
-      "before": 720,
-      "after": 718,
-      "bad_before": 2,
-      "merged": 2,
-      "round": 6
-    },
-    {
-      "before": 718,
-      "after": 718,
+      "before": 902,
+      "after": 902,
       "bad_before": 0,
       "merged": 0,
-      "round": 7
+      "round": 6
     }
   ],
   "status": "PASS"
