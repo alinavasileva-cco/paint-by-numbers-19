@@ -1,0 +1,75 @@
+{
+  "target_regions": "artistic_quality",
+  "source_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "reference_regions": 1501,
+  "regions_total": 718,
+  "regions_numbered": 718,
+  "regions_without_number": 0,
+  "all_regions_numbered": true,
+  "label_fit_passed_regions": 718,
+  "label_fit_failed_regions": 0,
+  "pixels_without_color_assignment": 0,
+  "disconnected_region_ids": [],
+  "unlabelled_region_ids": [],
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "colors_in_derived_image": 19,
+  "source_colors": 19,
+  "source_not_overwritten": true,
+  "changed_pixels": 76649,
+  "changed_pixels_in_foreground_face_and_kimono": 43194,
+  "changed_fraction_in_foreground_face_and_kimono": 0.041011,
+  "changed_pixels_in_background": 33455,
+  "rounds": [
+    {
+      "before": 1501,
+      "after": 1029,
+      "bad_before": 784,
+      "merged": 588,
+      "round": 1
+    },
+    {
+      "before": 1029,
+      "after": 824,
+      "bad_before": 301,
+      "merged": 225,
+      "round": 2
+    },
+    {
+      "before": 824,
+      "after": 749,
+      "bad_before": 100,
+      "merged": 75,
+      "round": 3
+    },
+    {
+      "before": 749,
+      "after": 726,
+      "bad_before": 26,
+      "merged": 19,
+      "round": 4
+    },
+    {
+      "before": 726,
+      "after": 720,
+      "bad_before": 7,
+      "merged": 5,
+      "round": 5
+    },
+    {
+      "before": 720,
+      "after": 718,
+      "bad_before": 2,
+      "merged": 2,
+      "round": 6
+    },
+    {
+      "before": 718,
+      "after": 718,
+      "bad_before": 0,
+      "merged": 0,
+      "round": 7
+    }
+  ],
+  "status": "PASS"
+}
