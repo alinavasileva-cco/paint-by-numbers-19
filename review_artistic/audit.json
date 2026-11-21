@@ -16,6 +16,8 @@
   "colors_in_derived_image": 19,
   "source_colors": 19,
   "source_not_overwritten": true,
+  "nonpaint_decorative_ink": true,
+  "artistic_visual_approval": "PENDING",
   "changed_pixels": 76649,
   "changed_pixels_in_foreground_face_and_kimono": 43194,
   "changed_fraction_in_foreground_face_and_kimono": 0.041011,
