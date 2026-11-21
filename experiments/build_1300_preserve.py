@@ -513,7 +513,14 @@ def create_final(source, out):
     ys,xs=np.ogrid[:h,:w]
     protected_girl=(((xs-494)/252)**2+((ys-620)/455)**2<=1)
     protected_eyes=((xs>535)&(xs<675)&(ys>355)&(ys<485))
-    protected_ink=np.logical_or(protected_girl,protected_eyes)
+    # Entire foreground (including lanterns, water and kimono) is immutable.
+    # The distant panorama is the only permitted structural edit area.
+    protected_foreground = ys >= round(h * 560 / 1402)
+    protected_ink = np.logical_or.reduce((
+        np.broadcast_to(protected_foreground, (h,w)),
+        np.broadcast_to(protected_girl, (h,w)),
+        np.broadcast_to(protected_eyes, (h,w))
+    ))
     protected_delta=np.count_nonzero(
         np.logical_and(pigments[ids]!=derived_colors,protected_ink))
     protected_delta_before_pockets=int(np.count_nonzero(
@@ -567,7 +574,7 @@ def create_final(source, out):
             not missing_pigment_pixels and used_colors==19 and
             len(actual_ids)==TARGET and
             (TARGET-len(missing))==len(actual_ids) and
-            protected_delta / max(1,total_protected) < 0.03
+            protected_delta == 0
         ) else "NEEDS_ARTISTIC_REVIEW",
     }
     (out/"audit_1000.json").write_text(
