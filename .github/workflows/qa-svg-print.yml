@@ -1,0 +1,32 @@
+name: Validate number footprints against printed SVG contours
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/qa_svg_print.py'
+      - '.github/workflows/qa-svg-print.yml'
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Compare label against linework at rendered print resolution
+        run: python experiments/qa_svg_print.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: print-proof-qa
+          path: review_art_v4/print_proof_qa.json
+      - name: Save verification report on experimental branch only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review_art_v4/print_proof_qa.json
+          git commit -m 'Record print-scale SVG label collision audit' || exit 0
+          git pull --rebase origin art-minimal-merges-v4
+          git push origin HEAD:art-minimal-merges-v4
