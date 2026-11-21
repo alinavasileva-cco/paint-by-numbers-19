@@ -1,0 +1,24 @@
+name: Verify immutable foreground vs 1300 numbered areas
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/feasibility_1300.py'
+      - '.github/workflows/feasibility-1300.yml'
+jobs:
+  feasibility:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python experiments/feasibility_1300.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: immutable-foreground-audit
+          path: study_1300/feasibility.json
+          retention-days: 14
