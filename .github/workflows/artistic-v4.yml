@@ -1,0 +1,41 @@
+name: Artistic consolidation with close same-pigment reconnection
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/build_artistic_v4.py'
+      - '.github/workflows/artistic-v4.yml'
+concurrency:
+  group: art-minimal-v4
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Rebuild approved 1501-area artwork with local same-color reconnections
+        run: python experiments/build_artistic_v4.py --out result_v4
+      - name: Upload review material
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-faithful-art-v4
+          path: result_v4/
+          retention-days: 14
+      - name: Publish isolated candidate after technical PASS only
+        if: success()
+        run: |
+          mkdir -p review_art_v4
+          cp result_v4/* review_art_v4/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review_art_v4
+          git commit -m 'Publish original-color-preserving PBN art review' || exit 0
+          git pull --rebase origin art-minimal-merges-v4
+          git push origin HEAD:art-minimal-merges-v4
