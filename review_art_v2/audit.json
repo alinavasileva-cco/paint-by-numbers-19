@@ -1,0 +1,74 @@
+{
+  "target_regions": "artistic_quality",
+  "source_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "reference_regions": 1501,
+  "regions_total": 946,
+  "regions_numbered": 946,
+  "regions_without_number": 0,
+  "all_regions_numbered": true,
+  "label_fit_passed_regions": 946,
+  "label_fit_failed_regions": 0,
+  "pixels_without_color_assignment": 0,
+  "disconnected_region_ids": [],
+  "unlabelled_region_ids": [],
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "colors_in_derived_image": 19,
+  "source_colors": 19,
+  "source_not_overwritten": true,
+  "nonpaint_decorative_ink": true,
+  "label_fitting_method": "5.3pt actual-font glyph footprint, 1px halo, upright or rotated",
+  "rotated_label_count": 40,
+  "shared_vector_contours_softened": true,
+  "artistic_visual_approval": "PENDING",
+  "based_on_original_1501_review": true,
+  "changed_pixels": 29397,
+  "changed_pixels_in_foreground_face_and_kimono": 15074,
+  "changed_fraction_in_foreground_face_and_kimono": 0.014312,
+  "changed_pixels_in_background": 14323,
+  "rounds": [
+    {
+      "before": 1501,
+      "after": 1156,
+      "bad_before": 547,
+      "merged": 410,
+      "round": 1
+    },
+    {
+      "before": 1156,
+      "after": 1022,
+      "bad_before": 206,
+      "merged": 154,
+      "round": 2
+    },
+    {
+      "before": 1022,
+      "after": 970,
+      "bad_before": 72,
+      "merged": 54,
+      "round": 3
+    },
+    {
+      "before": 970,
+      "after": 952,
+      "bad_before": 22,
+      "merged": 16,
+      "round": 4
+    },
+    {
+      "before": 952,
+      "after": 946,
+      "bad_before": 5,
+      "merged": 5,
+      "round": 5
+    },
+    {
+      "before": 946,
+      "after": 946,
+      "bad_before": 0,
+      "merged": 0,
+      "round": 6
+    }
+  ],
+  "status": "PASS"
+}
