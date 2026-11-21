@@ -1,0 +1,258 @@
+{
+  "base": "review_art_v4/lineart_soft_review.svg",
+  "initial_print_label_outline_overlap_px": 108,
+  "result_print_label_outline_overlap_px": 0,
+  "modified_label_count": 22,
+  "modifications": [
+    {
+      "region_id": 869,
+      "delta_screen_pixels": [
+        -2,
+        0
+      ],
+      "delta_mm": [
+        -0.333,
+        0.0
+      ]
+    },
+    {
+      "region_id": 518,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 919,
+      "delta_screen_pixels": [
+        0,
+        -2
+      ],
+      "delta_mm": [
+        0.0,
+        -0.333
+      ]
+    },
+    {
+      "region_id": 534,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 833,
+      "delta_screen_pixels": [
+        0,
+        -2
+      ],
+      "delta_mm": [
+        0.0,
+        -0.333
+      ]
+    },
+    {
+      "region_id": 462,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 825,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 218,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 240,
+      "delta_screen_pixels": [
+        -1,
+        0
+      ],
+      "delta_mm": [
+        -0.167,
+        0.0
+      ]
+    },
+    {
+      "region_id": 467,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 891,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 42,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 238,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 2,
+      "delta_screen_pixels": [
+        -1,
+        0
+      ],
+      "delta_mm": [
+        -0.167,
+        0.0
+      ]
+    },
+    {
+      "region_id": 50,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 179,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 198,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 502,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 706,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 788,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 845,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 875,
+      "delta_screen_pixels": [
+        -1,
+        0
+      ],
+      "delta_mm": [
+        -0.167,
+        0.0
+      ]
+    }
+  ],
+  "uncorrected_labels": [],
+  "centers_outside_own_region": [],
+  "labels_total": 945,
+  "original_pigment_regions": 945,
+  "font_size_pt": 5.3,
+  "line_width_mm": 0.2,
+  "source_png_unchanged": true,
+  "status": "PASS"
+}
