@@ -24,6 +24,33 @@
     "ear_folds": 0,
     "sakura_stamens": 2
   },
+  "pixel_changes_by_object": {
+    "face_and_hair": {
+      "pixels_changed": 6504,
+      "fraction": 0.042874,
+      "region_pixels": 151700
+    },
+    "kimono_and_sakura": {
+      "pixels_changed": 5918,
+      "fraction": 0.01996,
+      "region_pixels": 296500
+    },
+    "foreground_left_lantern": {
+      "pixels_changed": 903,
+      "fraction": 0.016382,
+      "region_pixels": 55120
+    },
+    "foreground_right_lantern": {
+      "pixels_changed": 1748,
+      "fraction": 0.012058,
+      "region_pixels": 144960
+    },
+    "distant_skyline": {
+      "pixels_changed": 11350,
+      "fraction": 0.034291,
+      "region_pixels": 330990
+    }
+  },
   "label_fitting_method": "5.3pt actual-font glyph footprint, 1px halo, upright or rotated",
   "rotated_label_count": 40,
   "shared_vector_contours_softened": true,
