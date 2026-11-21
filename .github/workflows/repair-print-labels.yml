@@ -1,0 +1,36 @@
+name: Repair number placements in softened vector
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/repair_print_labels.py'
+      - '.github/workflows/repair-print-labels.yml'
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python experiments/repair_print_labels.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: final-print-geometry-audit
+          path: |
+            review_art_v4/print_final_qa.json
+            review_art_v4/lineart_final_review.svg
+            review_art_v4/lineart_final_preview.png
+            review_art_v4/lineart_final_screen.png
+          retention-days: 14
+      - name: Publish print-diagnostic variant only on experimental branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review_art_v4/print_final_qa.json review_art_v4/lineart_final*
+          git commit -m 'Publish glyph placement adjustments and actual render QA' || exit 0
+          git pull --rebase origin art-minimal-merges-v4
+          git push origin HEAD:art-minimal-merges-v4
