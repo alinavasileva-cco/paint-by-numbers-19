@@ -1,0 +1,41 @@
+name: Source-guided fine artistic consolidation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/build_artistic_v3.py'
+      - '.github/workflows/artistic-v3.yml'
+concurrency:
+  group: art-minimal-v3
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Rebuild original 1501 study and protect facial contours
+        run: python experiments/build_artistic_v3.py --out result_v3
+      - name: Upload technical and visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artistic-source-guided-v3
+          path: result_v3/
+          retention-days: 14
+      - name: Publish only to isolated study branch after technical check
+        if: success()
+        run: |
+          mkdir -p review_art_v3
+          cp result_v3/* review_art_v3/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review_art_v3
+          git commit -m 'Publish source-guided artistic refinement for review' || exit 0
+          git pull --rebase origin art-minimal-merges-v3
+          git push origin HEAD:art-minimal-merges-v3
