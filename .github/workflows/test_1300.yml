@@ -1,0 +1,31 @@
+name: Test protected 1300-region study
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/build_1300_preserve.py'
+      - '.github/workflows/test_1300.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Rebuild the prior 1501-region baseline
+        run: python scripts/build.py --input 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Try 1300 with zero changed foreground pixels
+        run: python experiments/build_1300_preserve.py --source 'THE_CASE_ночные_фонари_19_красок.png' --out outputs
+      - name: Keep diagnostics without publishing a rejected candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-1300-diagnostic
+          path: |
+            outputs/audit_1000.json
+            outputs/audit.json
+          retention-days: 7
