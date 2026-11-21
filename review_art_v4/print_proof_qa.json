@@ -1,0 +1,27 @@
+{
+  "note": "Rasterized at 2400x3600; label-edge overlap detects line/ink collisions",
+  "candidates": [
+    {
+      "file": "review_art_v4/lineart_review.svg",
+      "label_count": 945,
+      "center_outside_numbered_region": [],
+      "center_outside_count": 0,
+      "label_contour_overlap_px": 82,
+      "outline_ink_px": 402838,
+      "number_ink_px": 30094,
+      "font_pt": 5.3,
+      "line_width_mm": 0.2
+    },
+    {
+      "file": "review_art_v4/lineart_soft_review.svg",
+      "label_count": 945,
+      "center_outside_numbered_region": [],
+      "center_outside_count": 0,
+      "label_contour_overlap_px": 108,
+      "outline_ink_px": 388206,
+      "number_ink_px": 30094,
+      "font_pt": 5.3,
+      "line_width_mm": 0.2
+    }
+  ]
+}
