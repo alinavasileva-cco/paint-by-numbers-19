@@ -331,6 +331,23 @@ def generate(source, dest):
       0,0,360,1,-1)
     protected=np.logical_or(fore,maskface>0)
     changed=(work!=original)
+    # Per-object audit separates acceptable tiny edits from losses in
+    # compositionally important face, embroidered kimono, and lanterns.
+    objects={
+        "face_and_hair":(290,195,700,565),
+        "kimono_and_sakura":(165,520,758,1020),
+        "foreground_left_lantern":(0,590,208,855),
+        "foreground_right_lantern":(768,900,1070,1380),
+        "distant_skyline":(0,0,1122,295)
+    }
+    region_deltas={}
+    for object_name,(x0,y0,x1,y1) in objects.items():
+        object_diff=changed[y0:y1,x0:x1]
+        region_deltas[object_name]={
+            "pixels_changed":int(object_diff.sum()),
+            "fraction":round(float(object_diff.mean()),6),
+            "region_pixels":int(object_diff.size)
+        }
     microink, microink_by_zone=source_microline_ink(original,work,palette)
     xoff=(PAGE_W-work.shape[1]*scale)/2
     yoff=(PAGE_H-work.shape[0]*scale)/2
@@ -355,6 +372,7 @@ def generate(source, dest):
       "nonpaint_decorative_ink":True,
       "source_guided_ink_pixels":int(np.count_nonzero(microink)),
       "source_guided_ink_elements":microink_by_zone,
+      "pixel_changes_by_object":region_deltas,
       "label_fitting_method":"5.3pt actual-font glyph footprint, 1px halo, upright or rotated",
       "rotated_label_count":int(np.count_nonzero(rotations)),
       "shared_vector_contours_softened":True,
@@ -408,7 +426,10 @@ def generate(source, dest):
         extra=f' transform="rotate({int(rotation)} {x:.4f} {y:.4f})"' if rotation else ''
         lines.append(f'<text x="{x:.4f}" y="{y:.4f}"{extra}>{numbers[int(colors[rid])]}</text>')
     lines.append('</g></svg>')
-    (dest/"lineart_review.svg").write_text("\n".join(lines),encoding="utf-8")
+    vector_text="\n".join(lines)
+    if vector_text.count("<text ") != int(ids.max()):
+        raise RuntimeError("SVG label count mismatch; do not publish")
+    (dest/"lineart_review.svg").write_text(vector_text,encoding="utf-8")
     cairosvg.svg2png(url=str(dest/"lineart_review.svg"),write_to=str(dest/"lineart_preview.png"),
                      output_width=2400,output_height=3600)
     cairosvg.svg2png(url=str(dest/"lineart_review.svg"),write_to=str(dest/"lineart_screen.png"),
