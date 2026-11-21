@@ -46,8 +46,27 @@ def assess(path):
     line_pixels=ink_mask(root,"lines")
     label_pixels=ink_mask(root,"text")
     overlap=line_pixels & label_pixels
+    from scipy.spatial import cKDTree
+    centers_px=np.asarray([
+        (float(t.attrib["x"])*WIDTH/400,
+         float(t.attrib["y"])*HEIGHT/600) for t in texts],float)
+    pixels_y,pixels_x=np.nonzero(overlap)
+    collisions=[]
+    if len(pixels_x):
+        _,near=cKDTree(centers_px).query(
+            np.column_stack((pixels_x,pixels_y)),k=1)
+        ids,counts=np.unique(near,return_counts=True)
+        for idx,count in sorted(zip(ids,counts),key=lambda x:-x[1]):
+            t=texts[int(idx)]
+            collisions.append({
+               "region_id":int(idx)+1,
+               "color_number":t.text,
+               "overlap_pixels":int(count),
+               "center_mm":[float(t.attrib["x"]),float(t.attrib["y"])],
+               "rotation":t.attrib.get("transform","none")})
     return {
        "file":str(path),
+       "colliding_numbered_regions":collisions,
        "label_count":len(texts),
        "center_outside_numbered_region":centers_bad[:100],
        "center_outside_count":len(centers_bad),
