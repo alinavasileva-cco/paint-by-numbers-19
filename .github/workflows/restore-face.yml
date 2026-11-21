@@ -1,0 +1,33 @@
+name: Restore face exactly from approved artwork
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/restore_untouched_face.py'
+      - '.github/workflows/restore-face.yml'
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Restore original facial artwork and audit numbering feasibility
+        run: python experiments/restore_untouched_face.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: face-preserved-proof
+          path: review_face_original/
+          retention-days: 14
+      - name: Save separated face-safe proof; never replace approved main version
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review_face_original/
+          git commit -m 'Proof: original face unchanged, with honest numbering audit' || exit 0
+          git pull --rebase origin art-minimal-merges-v4
+          git push origin HEAD:art-minimal-merges-v4
