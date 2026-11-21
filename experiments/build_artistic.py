@@ -160,9 +160,9 @@ def next_pass(indexed,palette,numbers,scale):
                 target_color[r]=colors[dst];changes+=1
     new_indexed=target_color[ids]
     newid,_,_=base.label_components(new_indexed,len(palette))
-    return new_indexed, {"before":n,"after":int(newid.max()),
-                         "bad_before":len(remaining),"merged":changes},
-           (ids,colors,fit,centers,dimensions)
+    return (new_indexed, {"before":n,"after":int(newid.max()),
+                          "bad_before":len(remaining),"merged":changes},
+            (ids,colors,fit,centers,dimensions))
 
 def generate(source, dest):
     dest.mkdir(parents=True,exist_ok=True)
