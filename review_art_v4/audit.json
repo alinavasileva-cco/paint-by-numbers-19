@@ -1,0 +1,122 @@
+{
+  "target_regions": "artistic_quality",
+  "source_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "reference_regions": 1501,
+  "regions_total": 945,
+  "regions_numbered": 945,
+  "regions_without_number": 0,
+  "all_regions_numbered": true,
+  "label_fit_passed_regions": 945,
+  "label_fit_failed_regions": 0,
+  "pixels_without_color_assignment": 0,
+  "disconnected_region_ids": [],
+  "unlabelled_region_ids": [],
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "colors_in_derived_image": 19,
+  "source_colors": 19,
+  "source_not_overwritten": true,
+  "nonpaint_decorative_ink": true,
+  "source_guided_ink_pixels": 137,
+  "source_guided_ink_elements": {
+    "near_eye": 6,
+    "far_eye": 3,
+    "ear_folds": 0,
+    "sakura_stamens": 2
+  },
+  "same_color_micro_bridges": 29,
+  "same_color_bridge_pixels": 43,
+  "pixel_changes_by_object": {
+    "face_and_hair": {
+      "pixels_changed": 6228,
+      "fraction": 0.041055,
+      "region_pixels": 151700
+    },
+    "kimono_and_sakura": {
+      "pixels_changed": 5821,
+      "fraction": 0.019632,
+      "region_pixels": 296500
+    },
+    "foreground_left_lantern": {
+      "pixels_changed": 903,
+      "fraction": 0.016382,
+      "region_pixels": 55120
+    },
+    "foreground_right_lantern": {
+      "pixels_changed": 1748,
+      "fraction": 0.012058,
+      "region_pixels": 144960
+    },
+    "distant_skyline": {
+      "pixels_changed": 11254,
+      "fraction": 0.034001,
+      "region_pixels": 330990
+    }
+  },
+  "label_fitting_method": "5.3pt actual-font glyph footprint, 1px halo, upright or rotated",
+  "rotated_label_count": 40,
+  "shared_vector_contours_softened": true,
+  "artistic_visual_approval": "PENDING",
+  "based_on_original_1501_review": true,
+  "changed_pixels": 28912,
+  "changed_pixels_in_foreground_face_and_kimono": 14725,
+  "changed_fraction_in_foreground_face_and_kimono": 0.013981,
+  "changed_pixels_in_background": 14187,
+  "rounds": [
+    {
+      "before": 1478,
+      "after": 1147,
+      "bad_before": 524,
+      "merged": 393,
+      "bridges": 26,
+      "bridge_pixels": 38,
+      "round": 1
+    },
+    {
+      "before": 1144,
+      "after": 1012,
+      "bad_before": 194,
+      "merged": 145,
+      "bridges": 3,
+      "bridge_pixels": 5,
+      "round": 2
+    },
+    {
+      "before": 1012,
+      "after": 964,
+      "bad_before": 63,
+      "merged": 47,
+      "bridges": 0,
+      "bridge_pixels": 0,
+      "round": 3
+    },
+    {
+      "before": 964,
+      "after": 950,
+      "bad_before": 17,
+      "merged": 12,
+      "bridges": 0,
+      "bridge_pixels": 0,
+      "round": 4
+    },
+    {
+      "before": 950,
+      "after": 945,
+      "bad_before": 4,
+      "merged": 4,
+      "bridges": 0,
+      "bridge_pixels": 0,
+      "round": 5
+    },
+    {
+      "before": 945,
+      "after": 945,
+      "bad_before": 0,
+      "merged": 0,
+      "bridges": 0,
+      "bridge_pixels": 0,
+      "round": 6
+    }
+  ],
+  "status": "PASS"
+}
