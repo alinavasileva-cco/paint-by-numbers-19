@@ -3,6 +3,178 @@
   "candidates": [
     {
       "file": "review_art_v4/lineart_review.svg",
+      "colliding_numbered_regions": [
+        {
+          "region_id": 869,
+          "color_number": "18",
+          "overlap_pixels": 11,
+          "center_mm": [
+            361.3191,
+            120.8556
+          ],
+          "rotation": "rotate(90 361.3191 120.8556)"
+        },
+        {
+          "region_id": 518,
+          "color_number": "12",
+          "overlap_pixels": 10,
+          "center_mm": [
+            24.0642,
+            136.5419
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 534,
+          "color_number": "12",
+          "overlap_pixels": 9,
+          "center_mm": [
+            272.9055,
+            296.2567
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 462,
+          "color_number": "10",
+          "overlap_pixels": 6,
+          "center_mm": [
+            183.066,
+            401.0695
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 825,
+          "color_number": "17",
+          "overlap_pixels": 6,
+          "center_mm": [
+            289.6613,
+            322.6381
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 833,
+          "color_number": "17",
+          "overlap_pixels": 6,
+          "center_mm": [
+            36.5419,
+            385.0267
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 919,
+          "color_number": "19",
+          "overlap_pixels": 6,
+          "center_mm": [
+            371.3012,
+            106.5954
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 218,
+          "color_number": "3",
+          "overlap_pixels": 5,
+          "center_mm": [
+            65.7754,
+            412.8342
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 467,
+          "color_number": "10",
+          "overlap_pixels": 5,
+          "center_mm": [
+            146.7023,
+            476.2923
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 42,
+          "color_number": "1",
+          "overlap_pixels": 4,
+          "center_mm": [
+            362.0321,
+            303.7433
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 238,
+          "color_number": "3",
+          "overlap_pixels": 4,
+          "center_mm": [
+            370.2317,
+            535.4724
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 179,
+          "color_number": "3",
+          "overlap_pixels": 3,
+          "center_mm": [
+            358.8235,
+            183.2442
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 198,
+          "color_number": "3",
+          "overlap_pixels": 2,
+          "center_mm": [
+            303.2086,
+            263.8146
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 706,
+          "color_number": "16",
+          "overlap_pixels": 2,
+          "center_mm": [
+            296.0784,
+            129.4118
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 7,
+          "color_number": "4",
+          "overlap_pixels": 1,
+          "center_mm": [
+            117.1123,
+            184.6702
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 845,
+          "color_number": "17",
+          "overlap_pixels": 1,
+          "center_mm": [
+            376.6488,
+            490.9091
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 875,
+          "color_number": "18",
+          "overlap_pixels": 1,
+          "center_mm": [
+            28.6988,
+            131.5508
+          ],
+          "rotation": "rotate(90 28.6988 131.5508)"
+        }
+      ],
       "label_count": 945,
       "center_outside_numbered_region": [],
       "center_outside_count": 0,
@@ -14,6 +186,228 @@
     },
     {
       "file": "review_art_v4/lineart_soft_review.svg",
+      "colliding_numbered_regions": [
+        {
+          "region_id": 869,
+          "color_number": "18",
+          "overlap_pixels": 11,
+          "center_mm": [
+            361.3191,
+            120.8556
+          ],
+          "rotation": "rotate(90 361.3191 120.8556)"
+        },
+        {
+          "region_id": 518,
+          "color_number": "12",
+          "overlap_pixels": 10,
+          "center_mm": [
+            24.0642,
+            136.5419
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 919,
+          "color_number": "19",
+          "overlap_pixels": 10,
+          "center_mm": [
+            371.3012,
+            106.5954
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 534,
+          "color_number": "12",
+          "overlap_pixels": 9,
+          "center_mm": [
+            272.9055,
+            296.2567
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 833,
+          "color_number": "17",
+          "overlap_pixels": 9,
+          "center_mm": [
+            36.5419,
+            385.0267
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 462,
+          "color_number": "10",
+          "overlap_pixels": 6,
+          "center_mm": [
+            183.066,
+            401.0695
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 825,
+          "color_number": "17",
+          "overlap_pixels": 6,
+          "center_mm": [
+            289.6613,
+            322.6381
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 218,
+          "color_number": "3",
+          "overlap_pixels": 5,
+          "center_mm": [
+            65.7754,
+            412.8342
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 240,
+          "color_number": "5",
+          "overlap_pixels": 5,
+          "center_mm": [
+            24.0642,
+            68.4492
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 467,
+          "color_number": "10",
+          "overlap_pixels": 5,
+          "center_mm": [
+            146.7023,
+            476.2923
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 891,
+          "color_number": "18",
+          "overlap_pixels": 5,
+          "center_mm": [
+            291.4439,
+            176.1141
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 42,
+          "color_number": "1",
+          "overlap_pixels": 4,
+          "center_mm": [
+            362.0321,
+            303.7433
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 238,
+          "color_number": "3",
+          "overlap_pixels": 4,
+          "center_mm": [
+            370.2317,
+            535.4724
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 2,
+          "color_number": "4",
+          "overlap_pixels": 3,
+          "center_mm": [
+            208.7344,
+            139.7504
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 50,
+          "color_number": "1",
+          "overlap_pixels": 3,
+          "center_mm": [
+            15.508,
+            364.3494
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 179,
+          "color_number": "3",
+          "overlap_pixels": 3,
+          "center_mm": [
+            358.8235,
+            183.2442
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 198,
+          "color_number": "3",
+          "overlap_pixels": 2,
+          "center_mm": [
+            303.2086,
+            263.8146
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 502,
+          "color_number": "11",
+          "overlap_pixels": 2,
+          "center_mm": [
+            41.533,
+            412.4777
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 706,
+          "color_number": "16",
+          "overlap_pixels": 2,
+          "center_mm": [
+            296.0784,
+            129.4118
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 788,
+          "color_number": "17",
+          "overlap_pixels": 2,
+          "center_mm": [
+            25.4902,
+            143.3155
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 845,
+          "color_number": "17",
+          "overlap_pixels": 1,
+          "center_mm": [
+            376.6488,
+            490.9091
+          ],
+          "rotation": "none"
+        },
+        {
+          "region_id": 875,
+          "color_number": "18",
+          "overlap_pixels": 1,
+          "center_mm": [
+            28.6988,
+            131.5508
+          ],
+          "rotation": "rotate(90 28.6988 131.5508)"
+        }
+      ],
       "label_count": 945,
       "center_outside_numbered_region": [],
       "center_outside_count": 0,
