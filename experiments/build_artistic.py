@@ -164,6 +164,61 @@ def next_pass(indexed,palette,numbers,scale):
                           "bad_before":len(remaining),"merged":changes},
             (ids,colors,fit,centers,dimensions))
 
+
+# Carefully authored open, non-enclosing decorative INK marks for details
+# that cannot host a 5.3-pt pigment number. They are printed linework,
+# not new paint areas, and therefore cannot create unnumbered paint islands.
+FACIAL_INK=[
+    # Near eye: tapered upper lash and lower rim following the original gaze
+    ((548,393),(570,382),(591,391),1.5),
+    ((549,395),(567,409),(588,402),1.1),
+    ((555,389),(574,377),(590,386),0.8),
+    ((560,396),(566,390),(571,397),0.85),
+    ((571,397),(576,406),(581,396),0.85),
+    ((565,399),(572,402),(578,399),0.75),
+    # Far, foreshortened eye; not a circular stamp
+    ((636,384),(645,374),(654,382),1.1),
+    ((636,391),(647,398),(653,390),0.9),
+    ((641,383),(645,382),(648,389),0.7),
+    # Ear outer shape and internal curved cartilaginous fold
+    ((468,415),(474,399),(490,408),1.0),
+    ((490,408),(501,428),(490,447),1.0),
+    ((476,416),(489,407),(492,428),0.85),
+    ((492,428),(479,432),(486,438),0.75),
+    # Existing mouth and nose are deliberately subtle
+    ((618,453),(624,457),(632,452),0.85),
+    ((629,447),(633,448),(636,444),0.65),
+    # Fine flower center; no new pigment shape
+    ((531,658),(541,670),(550,662),0.65),
+    ((541,650),(539,662),(539,675),0.65),
+]
+
+def decorative_paths(scale,xoff,yoff):
+    def point(p):
+        return f"{xoff+p[0]*scale:.3f},{yoff+p[1]*scale:.3f}"
+    return " ".join(
+        f'<path d="M{point(a)} Q{point(b)} {point(c)}" '
+        f'stroke="#171015" fill="none" stroke-width="{width*.20:.3f}" '
+        f'stroke-linecap="round" stroke-linejoin="round"/>'
+        for a,b,c,width in FACIAL_INK)
+
+def artist_ink_proof(flat,palette):
+    art=np.ascontiguousarray(flat.copy())
+    # Use one of the EXISTING nineteen pigments for printed decorative lines.
+    pigment=palette[np.argmin(palette.astype(float).sum(axis=1))]
+    ink=tuple(int(v) for v in pigment)
+    for a,b,c,width in FACIAL_INK:
+        t=np.linspace(0,1,35)[:,None]
+        curve=(1-t)**2*np.asarray(a)+2*t*(1-t)*np.asarray(b)+t**2*np.asarray(c)
+        points=np.rint(curve).astype(np.int32).reshape(-1,1,2)
+        cv2.polylines(art,[points],False,ink,max(1,int(round(width*1.4))),lineType=cv2.LINE_8)
+    # Small pointed pupils, registered to the source gaze as printed ink,
+    # not independent paintable cells or circles for label placement.
+    eye1=np.array([[574,397],[578,393],[581,398],[578,403],[575,402]],np.int32)
+    eye2=np.array([[645,383],[647,381],[649,385],[647,390],[645,387]],np.int32)
+    cv2.fillPoly(art,[eye1,eye2],ink,lineType=cv2.LINE_8)
+    return art
+
 def generate(source, dest):
     dest.mkdir(parents=True,exist_ok=True)
     original,palette,numbers,source_bytes,scale=prepare()
@@ -217,6 +272,8 @@ def generate(source, dest):
       "colors_in_derived_image":len(used),
       "source_colors":len(palette),
       "source_not_overwritten":True,
+      "nonpaint_decorative_ink":True,
+      "artistic_visual_approval":"PENDING",
       "changed_pixels":int(changed.sum()),
       "changed_pixels_in_foreground_face_and_kimono":int(np.sum(changed&protected)),
       "changed_fraction_in_foreground_face_and_kimono":round(float(np.mean(changed[protected])),6),
@@ -232,6 +289,7 @@ def generate(source, dest):
 
     # Region/color registry. Same fixed numbering as original 19 pigment palette.
     Image.fromarray(palette[work]).save(dest/"color_segmentation_review.png")
+    Image.fromarray(artist_ink_proof(palette[work],palette)).save(dest/"color_artist_preview.png")
     Image.fromarray(ids.astype(np.uint16)).save(dest/"region_ids_16bit.png")
     order=base.palette_indices(palette)
     with (dest/"palette.csv").open("w",newline="",encoding="utf-8-sig") as f:
@@ -253,7 +311,8 @@ def generate(source, dest):
       '<rect width="400" height="600" fill="white"/>',
       f'<g fill="none" stroke="#141414" stroke-width="{LINE_MM}" stroke-linejoin="round" stroke-linecap="round">',
       f'<rect x="{xoff:.3f}" y="{yoff:.3f}" width="{width:.3f}" height="{height:.3f}"/>',
-      f'<path d="{paths}"/>','</g>',
+      f'<path d="{paths}"/>',
+      decorative_paths(scale,xoff,yoff),'</g>',
       f'<g fill="#111" font-family="{FONT_NAME}, Arial, sans-serif" font-size="{FONT_MM:.5f}" text-anchor="middle" dominant-baseline="central">'
     ]
     for rid in range(1,int(ids.max())+1):
@@ -275,7 +334,7 @@ def generate(source, dest):
         "horizon":(0,0,1122,300),
         "foreground_lantern":(745,885,1090,1375)}.items():
         reference=Image.fromarray(original_rgb[top:bottom,left:right])
-        final=Image.fromarray(processed_rgb[top:bottom,left:right])
+        final=Image.fromarray(artist_ink_proof(processed_rgb,palette)[top:bottom,left:right])
         side=Image.new("RGB",(reference.width*2,reference.height))
         side.paste(reference,(0,0));side.paste(final,(reference.width,0))
         side.save(dest/f"comparison_{name}.png")
