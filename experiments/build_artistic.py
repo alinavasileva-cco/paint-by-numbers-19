@@ -57,23 +57,31 @@ def label_fit(ids,region_colors,color_numbers,scale):
     valid=np.zeros(n+1,np.bool_)
     locations=np.zeros((n+1,2),np.int32)
     widthheight=np.zeros((n+1,2),np.int16)
+    # True printed-ink silhouette, plus a full source-pixel halo. A label
+    # may fit an irregular patch where a rectangular enclosure would not.
+    silhouettes={}
+    for label in set(str(x) for x in color_numbers.values()):
+        bb=font.getbbox(label)
+        bw,bh=bb[2]-bb[0],bb[3]-bb[1]
+        canvas=Image.new("L",(bw+4,bh+4),0)
+        ImageDraw.Draw(canvas).text((2-bb[0],2-bb[1]),label,font=font,fill=255)
+        glyph=(np.asarray(canvas)>35).astype(np.uint8)
+        halo=cv2.dilate(glyph,cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3)))
+        silhouettes[label]=halo
     for rid in range(1,n+1):
         box=boxes[rid-1]
         if box is None: continue
         yy,xx=box
         mask=(ids[box]==rid).astype(np.uint8)
         label=str(color_numbers[int(region_colors[rid])])
-        bb=font.getbbox(label)
-        bw,bh=bb[2]-bb[0],bb[3]-bb[1]
-        # 1-px outline clearance on each side, plus half-pixel raster margin.
-        width,height=bw+4,bh+4
+        kernel=silhouettes[label]
+        height,width=kernel.shape
         widthheight[rid]=(width,height)
         if mask.shape[1] < width or mask.shape[0] < height:continue
-        eroded=cv2.erode(mask,np.ones((height,width),np.uint8),
+        eroded=cv2.erode(mask,kernel,
                          borderType=cv2.BORDER_CONSTANT,borderValue=0)
         candidates=(eroded>0)
         if not np.any(candidates):continue
-        # Favor a visually balanced position, with extra clearance.
         distance=cv2.distanceTransform(mask,cv2.DIST_L2,5)
         distance[~candidates]=0
         _,_,_,(col,row)=cv2.minMaxLoc(distance)
@@ -219,6 +227,53 @@ def artist_ink_proof(flat,palette):
     cv2.fillPoly(art,[eye1,eye2],ink,lineType=cv2.LINE_8)
     return art
 
+
+def soften_single_shared_vector_path(raw, scale):
+    """Round tiny raster kinks on shared interfaces, without new paint polygons.
+
+    The centerline is displaced by at most 0.75 reference-image pixels.
+    Sharp architectural corners with long segments retain their angle.
+    """
+    import re
+    out=[]
+    for part in re.findall(r'M[^M]+',raw):
+        pairs=re.findall(r'[ML](-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)',part)
+        if len(pairs)<3:
+            out.append(part)
+            continue
+        points=np.asarray([(float(x),float(y)) for x,y in pairs],float)
+        closed=part.strip().endswith('Z')
+        if closed and np.linalg.norm(points[0]-points[-1]) < 0.002:
+            points=points[:-1]
+        if len(points)<3:
+            out.append(part)
+            continue
+        def coord(p):return f'{p[0]:.3f},{p[1]:.3f}'
+        commands=['M'+coord(points[0])]
+        for i in range(1,len(points)-1):
+            a,b,c=points[i-1],points[i],points[i+1]
+            v=b-a
+            q=c-b
+            d1=float(np.linalg.norm(v))
+            d2=float(np.linalg.norm(q))
+            if min(d1,d2)<.001:continue
+            v/=d1;q/=d2
+            dot=float(np.dot(v,q))
+            if dot>.94 or dot<-.96:
+                commands.append('L'+coord(b))
+                continue
+            # Strong angular architecture and lantern edges remain straight.
+            if min(d1,d2)>8*scale and dot<.3:
+                commands.append('L'+coord(b))
+                continue
+            radius=min(.75*scale,.21*d1,.21*d2)
+            commands.append('L'+coord(b-v*radius)
+                            +'Q'+coord(b)+' '+coord(b+q*radius))
+        commands.append('L'+coord(points[-1]))
+        if closed:commands.append('Z')
+        out.append(''.join(commands))
+    return ' '.join(out)
+
 def generate(source, dest):
     dest.mkdir(parents=True,exist_ok=True)
     original,palette,numbers,source_bytes,scale=prepare()
@@ -273,6 +328,8 @@ def generate(source, dest):
       "source_colors":len(palette),
       "source_not_overwritten":True,
       "nonpaint_decorative_ink":True,
+      "label_fitting_method":"5.3pt actual-font ink footprint, 1px halo",
+      "shared_vector_contours_softened":True,
       "artistic_visual_approval":"PENDING",
       "changed_pixels":int(changed.sum()),
       "changed_pixels_in_foreground_face_and_kimono":int(np.sum(changed&protected)),
@@ -305,6 +362,7 @@ def generate(source, dest):
     # Trace a shared contour just once; rounded joins and soft line caps
     # eliminate pixel-doubled pen strokes without inventing paint patches.
     paths,_=base.trace_smooth_shared_interfaces(work,scale,xoff,yoff)
+    paths=soften_single_shared_vector_path(paths,scale)
     width,height=work.shape[1]*scale,work.shape[0]*scale
     lines=[
       '<svg xmlns="http://www.w3.org/2000/svg" width="400mm" height="600mm" viewBox="0 0 400 600">',
