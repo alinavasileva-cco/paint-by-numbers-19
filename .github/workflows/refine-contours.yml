@@ -1,0 +1,37 @@
+name: Review smoother single shared vector contours
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/refine_contours.py'
+      - '.github/workflows/refine-contours.yml'
+jobs:
+  smooth:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python experiments/refine_contours.py
+      - name: Upload alternative vector only
+        uses: actions/upload-artifact@v4
+        with:
+          name: softer-svg-with-same-labels-and-pigments
+          path: |
+            review_art_v4/lineart_soft_review.svg
+            review_art_v4/lineart_soft_screen.png
+            review_art_v4/lineart_soft_preview.png
+            review_art_v4/contour_smoothing_audit.json
+          retention-days: 14
+      - name: Publish alternative for comparison, not replace approved reference
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add review_art_v4/lineart_soft* review_art_v4/contour_smoothing_audit.json
+          git commit -m 'Add smoother vector contour option for artistic review' || exit 0
+          git pull --rebase origin art-minimal-merges-v4
+          git push origin HEAD:art-minimal-merges-v4
