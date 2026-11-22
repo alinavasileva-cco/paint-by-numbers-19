@@ -19,7 +19,7 @@ from pypdf import PdfReader
 import cairosvg
 ROOT=Path(__file__).resolve().parent.parent
 sys.path.insert(0,str(ROOT))
-from scripts.build import label_components, create_labels, trace_smooth_shared_interfaces
+from scripts.build import label_components, create_labels, trace_smooth_shared_interfaces, remove_speckles
 DIR=ROOT/'full_v11_v9_with_v10_face'
 SOURCE=DIR/'full_color_v11.png'
 W_MM=400.; FONT_PT=5.3; STROKE_MM=.2
@@ -44,7 +44,9 @@ def region_contacts(ids):
     return touches
 
 def merge_unfit(indexed,px_to_mm):
-    state=indexed.copy()
+    # Pre-merge only tiny antialias islands in the DERIVED paint map.
+    # The V9 source and the approved facial composite are never overwritten.
+    state=remove_speckles(indexed,19,min_area=48,rounds=4)
     notes=[]
     ncol=19
     pal=np.array([tuple(int(r[k]) for k in ('R','G','B')) for r in
@@ -110,8 +112,13 @@ def palette_page(pdf,rows):
 def main():
     rows,pal=read_palette()
     image=np.asarray(Image.open(SOURCE).convert('RGB'))
-    H,W=image.shape[:2]
-    if (W,H)!=(2244,2804):raise RuntimeError('Wrong scene size')
+    native_h,native_w=image.shape[:2]
+    if (native_w,native_h)!=(2244,2804):raise RuntimeError('Wrong V9 scene dimensions')
+    # The user's established printed reference was 1122x1402. Analyze at
+    # that exact original print-grid resolution, never rescale the V9
+    # scene SOURCE; a native-resolution composite remains separately.
+    W,H=1122,1402
+    image=cv2.resize(image,(W,H),interpolation=cv2.INTER_NEAREST)
     matches=np.all(image[:,:,None,:]==pal[None,None,:,:],axis=3)
     if not np.all(matches.any(axis=2)):raise RuntimeError('Non-palette pixels found')
     indexed=np.argmax(matches,axis=2).astype(np.uint8)
@@ -150,6 +157,7 @@ def main():
       'regions_numbered':len(labels),'regions_without_number':0,
       'font_pt':FONT_PT,'stroke_mm':STROKE_MM,'colors_total':19,
       'width_mm':W_MM,'height_mm':round(artwork_h_mm,2),
+      'original_composite_px':[native_w,native_h],'paint_grid_px':[W,H],
       'modified_pixels_by_numberability':changed,
       'modified_fraction_by_numberability':round(fraction,5),
       'regions_iterations':history,'segments':npath,
