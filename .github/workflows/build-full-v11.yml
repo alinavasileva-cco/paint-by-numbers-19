@@ -1,0 +1,56 @@
+name: V11 - Full V9 painting with approved V10 face
+on:
+  workflow_dispatch:
+  push:
+    branches: [art-v11-full-v9-approved-v10-face]
+    paths:
+      - 'experiments/full_v9_with_approved_v10_face.py'
+      - 'experiments/full_v11_numbers.py'
+      - '.github/workflows/build-full-v11.yml'
+jobs:
+  build_v11:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install 'reportlab>=4.2,<5' 'pypdf>=5,<7'
+      - name: Fetch approved V10 source
+        run: |
+          git fetch --no-tags origin art-v10-numbering-user-approved-lineart
+          mkdir -p face_reference_v10/output
+          git show origin/art-v10-numbering-user-approved-lineart:face_reference_v10/output/color_assignment_review.png > face_reference_v10/output/color_assignment_review.png
+          git show origin/art-v10-numbering-user-approved-lineart:face_reference_v10/output/audit.json > face_reference_v10/output/audit.json
+      - name: Composite V9 and V10 source without AI generation
+        run: python experiments/full_v9_with_approved_v10_face.py
+      - name: Build fully numbered V11 paint-by-numbers proofs
+        if: success()
+        run: |
+          if [ -f experiments/full_v11_numbers.py ]; then
+            python experiments/full_v11_numbers.py
+          fi
+      - name: Save proof artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-v11-v9-with-approved-v10-face
+          path: full_v11_v9_with_v10_face/
+          retention-days: 30
+      - name: Publish proofs to V11 branch
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add full_v11_v9_with_v10_face/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Publish V11 V9-based full painting with approved V10 face and QA'
+          git pull --rebase origin art-v11-full-v9-approved-v10-face
+          git push origin HEAD:art-v11-full-v9-approved-v10-face
