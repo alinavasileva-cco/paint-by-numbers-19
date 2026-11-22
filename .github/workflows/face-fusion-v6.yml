@@ -1,0 +1,35 @@
+name: V6 previous face plus unchanged V5 rest
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/fuse_previous_face_v6.py'
+      - '.github/workflows/face-fusion-v6.yml'
+jobs:
+  composite:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Build exact old face plus preserved V5 background
+        run: python experiments/fuse_previous_face_v6.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: previous-face-current-rest
+          path: face_v6/
+          retention-days: 14
+      - name: Save isolated comparison without rewriting approved versions
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v6
+          git commit -m 'Publish exact previous face with V5 body and true numbering audit' || exit 0
+          git pull --rebase origin art-v6-previous-face-current-rest
+          git push origin HEAD:art-v6-previous-face-current-rest
