@@ -69,6 +69,18 @@
     18,
     19
   ],
+  "manual_color_corrections": [
+    {
+      "region": 66,
+      "from": 19,
+      "to": 17,
+      "reference_point_xy": [
+        755,
+        850
+      ],
+      "reason": "skin beneath right-side eye"
+    }
+  ],
   "ambiguous_color_assignments_below_75pct": 12,
   "color_assignments_review_required": true,
   "status": "REVIEW_REQUIRED"
