@@ -97,7 +97,7 @@ def redraw_features(work,numidx):
         pupil=np.zeros((h,w),np.uint8)
         cv2.ellipse(iris,(cx,cy),(rx,ry),-7,0,360,1,-1)
         cv2.ellipse(pupil,(px,py),(prx,pry),-6,0,360,1,-1)
-        m=eyes[name]
+        m=eye_masks[name]
         revised[(iris>0)&m]=color(14)
         revised[(pupil>0)&m]=color(4)
     # Ear restored as a distinct, coherent shape and large shading mass.
