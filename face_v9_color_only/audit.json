@@ -1,0 +1,26 @@
+{
+  "version": "V9_FACE_COLOR_ART_ONLY",
+  "source_segmentation": "face_v8/color_segmentation_review.png",
+  "changes_outside_face_rectangle": 0,
+  "face_edit_rectangle_px": [
+    456,
+    344,
+    675,
+    512
+  ],
+  "face_palette_limit": 7,
+  "face_pigment_count": 6,
+  "face_pigment_numbers": [
+    4,
+    13,
+    14,
+    15,
+    18,
+    19
+  ],
+  "face_pixels_repainted": 7075,
+  "original_source_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "original_source_unchanged": true,
+  "numbering_not_started": true,
+  "status": "COLOR_ART_FOR_ARTISTIC_REVIEW"
+}
