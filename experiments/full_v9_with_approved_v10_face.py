@@ -62,6 +62,18 @@ def main():
                           (720,617),(671,574),(647,514)],np.int32)
     cv2.fillPoly(restrict,[np.rint(target_poly * np.array([sx,sy])).astype(np.int32)],255)
     matte=cv2.bitwise_and(matte,restrict)
+    # Use the original V9 face silhouette as an occlusion matte. In the
+    # first review the rectangular TOP of the V10 source inserted golden
+    # bangs over V9 hair and created a straight horizontal splice seam.
+    # Skin-colored V9 pixels define the precise shape of the forehead;
+    # closing adds the two old eye cavities so approved V10 eyes transfer.
+    v9_skin_sample=base[round(540*sy),round(760*sx)].astype(np.int16)
+    skin_distance=np.abs(base.astype(np.int16)-v9_skin_sample[None,None,:]).sum(axis=2)
+    native_skin=(skin_distance<=24).astype(np.uint8)
+    skin_face=cv2.bitwise_and(native_skin,restrict//255)
+    envelope=cv2.morphologyEx(skin_face,cv2.MORPH_CLOSE,
+                   cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(71,71)))
+    matte=cv2.bitwise_and(matte,(envelope*255).astype(np.uint8))
     merged=base.copy()
     merged[matte>0]=warped[matte>0]
     # QA fix: the first proof had a visible horizontal rectangle-shaped
