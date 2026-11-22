@@ -120,39 +120,49 @@ def redraw_indexed(base_map,palette,numbers):
     ]) & ear
     fill_named(work,ear_shade,"shadow",colors)
 
-    # Eyes. The almond is divided into connected, substantial, SIDE-BY-SIDE
-    # painting fields, rather than concentric rings too narrow for a number.
-    # Distinct colors: warm sclera, hazel iris, dark pupil (and a warm accent
-    # as a printed lash, not as an unnumbered micro-island).
+    # Eyes: hand-directed organic sclera / iris / pupil, not straight
+    # computer-generated color stripes. Each pigment remains an independently
+    # measurable paint field carrying a real 5.3pt number.
     near_eye=shape_canvas(h,w,[
-      ("M",(547,393)),
-      ("C",((558,382),(578,378),(592,388))),
-      ("C",((601,391),(603,398),(596,402))),
-      ("C",((584,410),(561,409),(551,402))),
-      ("C",((548,400),(546,396),(547,393)))
+      ("M",(543,392)),
+      ("C",((559,381),(577,378),(593,387))),
+      ("C",((606,391),(608,398),(602,401))),
+      ("C",((585,414),(557,411),(546,401))),
+      ("C",((543,398),(542,395),(543,392)))
     ])
-    # Source compatible pupil/iris 3-way segmentation.
-    xx=np.indices((h,w))[1]
-    near_fields={
-      "sclera":near_eye&(xx<565),
-      "iris":near_eye&(xx>=565)&(xx<582),
-      "dark":near_eye&(xx>=582)
-    }
-    for kind,mask in near_fields.items():fill_named(work,mask,kind,colors)
-
     far_eye=shape_canvas(h,w,[
-      ("M",(625,388)),
-      ("C",((632,377),(644,375),(655,380))),
-      ("C",((664,385),(663,391),(656,396))),
-      ("C",((644,400),(632,398),(625,388)))
+      ("M",(623,386)),
+      ("C",((633,377),(646,373),(658,380))),
+      ("C",((669,386),(668,393),(660,396))),
+      ("C",((645,403),(630,397),(623,386)))
     ])
-    far_fields={
-      "sclera":far_eye&(xx<641),
-      "iris":far_eye&(xx>=641)&(xx<653),
-      "dark":far_eye&(xx>=653)
-    }
-    for kind,mask in far_fields.items():fill_named(work,mask,kind,colors)
-
+    fill_named(work,near_eye,"sclera",colors)
+    fill_named(work,far_eye,"sclera",colors)
+    # Lopsided painted iris disks leave generous near-left eye whites.
+    iris_a=np.zeros((h,w),np.uint8)
+    iris_b=np.zeros((h,w),np.uint8)
+    cv2.ellipse(iris_a,(582,396),(18,13),-10,0,360,255,thickness=-1)
+    cv2.ellipse(iris_b,(650,387),(13,12),-10,0,360,255,thickness=-1)
+    iris_a=(iris_a>0)&near_eye
+    iris_b=(iris_b>0)&far_eye
+    fill_named(work,iris_a,"iris",colors)
+    fill_named(work,iris_b,"iris",colors)
+    # Offset, dark almond-shaped pupils: real palette color 4, not unnumbered
+    # decorative dots. Direction of gaze matches the rightward profile.
+    pupil_a=shape_canvas(h,w,[
+      ("M",(588,389)),("C",((592,386),(598,391),(599,396))),
+      ("C",((600,402),(596,406),(590,404))),
+      ("C",((587,400),(587,393),(588,389)))
+    ])&iris_a
+    pupil_b=shape_canvas(h,w,[
+      ("M",(655,382)),("C",((660,382),(662,386),(662,390))),
+      ("C",((661,395),(656,396),(653,391))),
+      ("C",((652,387),(653,384),(655,382)))
+    ])&iris_b
+    fill_named(work,pupil_a,"dark",colors)
+    fill_named(work,pupil_b,"dark",colors)
+    # The black slit contour and eyelash geometry is printed as vector ink;
+    # it cannot introduce an unlabeled paint region.
     protected_eye_pigment=near_eye|far_eye
     protected_face=face|ear|near_eye|far_eye
     return work, {"face":face,"ear":ear,"near_eye":near_eye,
@@ -198,7 +208,7 @@ def local_fit_merge(work,palette,numbers,scale,masks,max_rounds=35):
                 if othercolor==current:continue
                 if not fits[other] and areas[other]<areas[rid]:continue
                 # Aim for within-face same-object neighbors and compatible hues.
-                cost=float(np.linalg.norm(lab[current]-lab[other]))*3
+                cost=float(np.linalg.norm(lab[current]-lab[othercolor]))*3
                 cost-=min(edge,100)*.35
                 if fits[other]:cost-=35
                 if np.any((ids==other)&protected_eye):cost+=300
