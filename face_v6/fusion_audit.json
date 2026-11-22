@@ -1,0 +1,13 @@
+{
+  "exact_previous_face_pixels_changed": 0,
+  "v5_outside_face_pixels_changed": 0,
+  "face_pixels_swapped": 7885,
+  "face_mask_pixel_count": 28822,
+  "approved_previous_face_reference": "review_face_original/color_preview_face_untouched.png",
+  "latest_rest_reference": "face_v5/color_segmentation_review.png",
+  "exact_version_regions_total": 1094,
+  "exact_version_regions_without_number": 150,
+  "print_candidate_status": "NOT_PRINT_READY",
+  "print_candidate_regions_without_number": 118,
+  "preexisting_approved_main_art_unchanged": true
+}
