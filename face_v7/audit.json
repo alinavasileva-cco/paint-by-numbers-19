@@ -6,28 +6,27 @@
     677,
     515
   ],
-  "changed_pixels_inside_edit_area": 3980,
+  "changed_pixels_inside_edit_area": 3210,
   "changed_pixels_outside_edit_area": 0,
-  "regions_total": 963,
+  "regions_total": 949,
   "regions_numbered": 948,
-  "regions_without_number": 15,
-  "label_fit_failed_regions": 15,
+  "regions_without_number": 1,
+  "label_fit_failed_regions": 1,
   "unfit_ids": [
-    480,
-    481,
-    482,
-    483,
-    533,
-    581,
-    582,
-    584,
-    586,
-    664,
-    736,
-    817,
-    818,
-    821,
-    912
+    480
+  ],
+  "unfit_details": [
+    {
+      "id": 480,
+      "color_number": 11,
+      "area_px": 65,
+      "bbox": [
+        636,
+        384,
+        646,
+        398
+      ]
+    }
   ],
   "all_regions_numbered": false,
   "disconnected_region_ids": [],
@@ -40,115 +39,85 @@
   "merge_passes": [
     {
       "pass": 1,
-      "before": 1070,
-      "unfit_before": 121,
-      "merged": 121,
-      "violations": []
+      "before": 1079,
+      "unfit_before": 132,
+      "merged": 126,
+      "violations": [
+        {
+          "id": 454,
+          "cause": "no_compatible_neighbor",
+          "area": 19
+        },
+        {
+          "id": 598,
+          "cause": "no_compatible_neighbor",
+          "area": 45
+        },
+        {
+          "id": 536,
+          "cause": "protect_important_eye_color_shape",
+          "area": 64
+        },
+        {
+          "id": 757,
+          "cause": "no_compatible_neighbor",
+          "area": 70
+        },
+        {
+          "id": 759,
+          "cause": "no_compatible_neighbor",
+          "area": 73
+        },
+        {
+          "id": 761,
+          "cause": "no_compatible_neighbor",
+          "area": 105
+        }
+      ]
     },
     {
       "pass": 2,
-      "before": 1006,
-      "unfit_before": 58,
-      "merged": 58,
-      "violations": []
+      "before": 990,
+      "unfit_before": 42,
+      "merged": 40,
+      "violations": [
+        {
+          "id": 499,
+          "cause": "protect_important_eye_color_shape",
+          "area": 65
+        },
+        {
+          "id": 689,
+          "cause": "no_compatible_neighbor",
+          "area": 120
+        }
+      ]
     },
     {
       "pass": 3,
-      "before": 985,
-      "unfit_before": 37,
-      "merged": 37,
-      "violations": []
+      "before": 954,
+      "unfit_before": 6,
+      "merged": 5,
+      "violations": [
+        {
+          "id": 482,
+          "cause": "protect_important_eye_color_shape",
+          "area": 65
+        }
+      ]
     },
     {
       "pass": 4,
-      "before": 979,
-      "unfit_before": 31,
-      "merged": 31,
-      "violations": []
-    },
-    {
-      "pass": 5,
-      "before": 975,
-      "unfit_before": 27,
-      "merged": 27,
-      "violations": []
-    },
-    {
-      "pass": 6,
-      "before": 970,
-      "unfit_before": 22,
-      "merged": 22,
-      "violations": []
-    },
-    {
-      "pass": 7,
-      "before": 966,
-      "unfit_before": 18,
-      "merged": 18,
-      "violations": []
-    },
-    {
-      "pass": 8,
-      "before": 964,
-      "unfit_before": 16,
-      "merged": 16,
-      "violations": []
-    },
-    {
-      "pass": 9,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 10,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 11,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 12,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 13,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 14,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 15,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
-    },
-    {
-      "pass": 16,
-      "before": 963,
-      "unfit_before": 15,
-      "merged": 15,
-      "violations": []
+      "before": 949,
+      "unfit_before": 1,
+      "merged": 0,
+      "violations": [
+        {
+          "id": 480,
+          "cause": "protect_important_eye_color_shape",
+          "area": 65
+        }
+      ]
     }
   ],
   "visual_approval": "PENDING",
