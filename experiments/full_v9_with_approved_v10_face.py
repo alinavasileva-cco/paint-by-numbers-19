@@ -22,7 +22,7 @@ def main():
     base=np.asarray(Image.open(V9).convert("RGB"))
     face=np.asarray(Image.open(V10).convert("RGB"))
     H,W=base.shape[:2]
-    if face.shape[:2]!=(1402,1122) or (W,H)!=(1408,1760):
+    if face.shape[:2]!=(1402,1122) or (W,H)!=(2244,2804):
         raise RuntimeError(f"Unexpected dimensions: V9={W,H} V10={face.shape[:2]}")
     with PALETTE.open(encoding="utf-8-sig",newline="") as f:
         palette={int(row["Номер"]):tuple(int(row[k]) for k in ("R","G","B")) for row in csv.DictReader(f)}
@@ -34,7 +34,10 @@ def main():
     # Exact 3-landmark match: two eye centers and mouth, allowing affine scale
     # and shear to align the approved larger V10 face to the smaller V9 profile.
     source=np.float32([(515,822),(730,770),(720,1052)])
-    target=np.float32([(717,484),(816,481),(804,573)])
+    # V9 landmarks were measured from a 1408x1760 scaled preview;
+    # use native 2244x2804 source pixels without changing original resolution.
+    sx,sy=W/1408.,H/1760.
+    target=np.float32([(717*sx,484*sy),(816*sx,481*sy),(804*sx,573*sy)])
     affine=cv2.getAffineTransform(source,target)
     warped=cv2.warpAffine(face,affine,(W,H),flags=cv2.INTER_NEAREST,
                           borderMode=cv2.BORDER_CONSTANT,borderValue=palette[2])
@@ -53,17 +56,17 @@ def main():
     target_poly=np.array([(659,425),(737,420),(801,430),(839,466),
                           (851,523),(841,571),(813,614),(775,635),
                           (720,617),(671,574),(647,514)],np.int32)
-    cv2.fillPoly(restrict,[target_poly],255)
+    cv2.fillPoly(restrict,[np.rint(target_poly * np.array([sx,sy])).astype(np.int32)],255)
     matte=cv2.bitwise_and(matte,restrict)
     merged=base.copy()
     merged[matte>0]=warped[matte>0]
     changed=np.any(merged!=base,axis=2)
     nchanged=int(changed.sum())
-    if not 3000 <= nchanged <= 80000:
+    if not 3000 <= nchanged <= 200000:
         raise RuntimeError(f"Too many/few pixels modified by face transplant: {nchanged}")
     ys,xs=np.where(changed)
     bbox=[int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)]
-    if bbox[0]<635 or bbox[1]<410 or bbox[2]>860 or bbox[3]>645:
+    if bbox[0]<int(635*sx) or bbox[1]<int(410*sy) or bbox[2]>int(860*sx) or bbox[3]>int(645*sy):
         raise RuntimeError(f"Changes escaped facial vicinity: {bbox}")
     merged_colors={tuple(c.tolist()) for c in np.unique(merged.reshape(-1,3),axis=0)}
     if merged_colors-permissible:raise RuntimeError("Merged painting has non-palette colors")
@@ -71,7 +74,7 @@ def main():
     Image.fromarray(merged).save(art,optimize=True)
     Image.fromarray(matte).save(OUT/"facial_edit_mask.png",optimize=True)
     # QA: side by side crops, original vs new, at native pixels.
-    crop=(600,383,900,700)
+    crop=tuple(round(v*(sx if j%2==0 else sy)) for j,v in enumerate((600,383,900,700)))
     old=Image.fromarray(base).crop(crop)
     new=Image.fromarray(merged).crop(crop)
     proof=Image.new("RGB",(old.width*2,old.height+32),"white")
