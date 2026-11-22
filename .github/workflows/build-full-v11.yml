@@ -36,6 +36,16 @@ jobs:
           python experiments/full_v9_with_approved_v10_face.py > full_v11_v9_with_v10_face/composite_build.log 2>&1
           echo $? > full_v11_v9_with_v10_face/composite_exit_code.txt
           if [ "$(cat full_v11_v9_with_v10_face/composite_exit_code.txt)" = "0" ]; then
+            # Publish exact V9-preserving proof before the more costly
+            # numbered vector artwork, so the user can review the face now.
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add full_v11_v9_with_v10_face/
+            if ! git diff --cached --quiet; then
+              git commit -m 'V11 intermediate: full colored composite and face QA'
+              git pull --rebase origin art-v11-full-v9-approved-v10-face
+              git push origin HEAD:art-v11-full-v9-approved-v10-face
+            fi
             python experiments/full_v11_numbers.py > full_v11_v9_with_v10_face/numbering_build.log 2>&1
             echo $? > full_v11_v9_with_v10_face/numbering_exit_code.txt
           else
