@@ -111,7 +111,7 @@ def main():
     rows,pal=read_palette()
     image=np.asarray(Image.open(SOURCE).convert('RGB'))
     H,W=image.shape[:2]
-    if (W,H)!=(1408,1760):raise RuntimeError('Wrong scene size')
+    if (W,H)!=(2244,2804):raise RuntimeError('Wrong scene size')
     matches=np.all(image[:,:,None,:]==pal[None,None,:,:],axis=3)
     if not np.all(matches.any(axis=2)):raise RuntimeError('Non-palette pixels found')
     indexed=np.argmax(matches,axis=2).astype(np.uint8)
