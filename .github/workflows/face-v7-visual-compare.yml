@@ -1,0 +1,27 @@
+name: V7 face visual comparison
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/face_v7_visual_compare.py
+      - .github/workflows/face-v7-visual-compare.yml
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pillow
+      - run: python experiments/face_v7_visual_compare.py
+      - name: Save comparison to experiment only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v7/face_detail_final.png face_v7/face_before_after_final.png
+          git commit -m 'Provide cropped final face comparison' || exit 0
+          git pull --rebase origin art-v7-face-local-cleanup
+          git push origin HEAD:art-v7-face-local-cleanup
