@@ -6,29 +6,15 @@
     677,
     515
   ],
-  "changed_pixels_inside_edit_area": 3252,
+  "changed_pixels_inside_edit_area": 3384,
   "changed_pixels_outside_edit_area": 0,
   "regions_total": 951,
-  "regions_numbered": 950,
-  "regions_without_number": 1,
-  "label_fit_failed_regions": 1,
-  "unfit_ids": [
-    481
-  ],
-  "unfit_details": [
-    {
-      "id": 481,
-      "color_number": 11,
-      "area_px": 89,
-      "bbox": [
-        631,
-        382,
-        645,
-        395
-      ]
-    }
-  ],
-  "all_regions_numbered": false,
+  "regions_numbered": 951,
+  "regions_without_number": 0,
+  "label_fit_failed_regions": 0,
+  "unfit_ids": [],
+  "unfit_details": [],
+  "all_regions_numbered": true,
   "disconnected_region_ids": [],
   "pixels_without_color_assignment": 0,
   "font_size_pt": 5.3,
@@ -39,42 +25,27 @@
   "merge_passes": [
     {
       "pass": 1,
-      "before": 1081,
-      "unfit_before": 132,
-      "merged": 125,
+      "before": 1074,
+      "unfit_before": 124,
+      "merged": 120,
       "violations": [
         {
-          "id": 457,
-          "cause": "no_compatible_neighbor",
-          "area": 19
-        },
-        {
-          "id": 1066,
-          "cause": "no_compatible_neighbor",
-          "area": 25
-        },
-        {
-          "id": 600,
+          "id": 593,
           "cause": "no_compatible_neighbor",
           "area": 45
         },
         {
-          "id": 759,
+          "id": 752,
           "cause": "no_compatible_neighbor",
           "area": 70
         },
         {
-          "id": 761,
+          "id": 754,
           "cause": "no_compatible_neighbor",
           "area": 73
         },
         {
-          "id": 539,
-          "cause": "protect_important_eye_color_shape",
-          "area": 89
-        },
-        {
-          "id": 763,
+          "id": 756,
           "cause": "no_compatible_neighbor",
           "area": 105
         }
@@ -82,22 +53,12 @@
     },
     {
       "pass": 2,
-      "before": 995,
-      "unfit_before": 45,
-      "merged": 42,
+      "before": 989,
+      "unfit_before": 38,
+      "merged": 37,
       "violations": [
         {
-          "id": 981,
-          "cause": "no_compatible_neighbor",
-          "area": 25
-        },
-        {
-          "id": 504,
-          "cause": "protect_important_eye_color_shape",
-          "area": 89
-        },
-        {
-          "id": 693,
+          "id": 688,
           "cause": "no_compatible_neighbor",
           "area": 120
         }
@@ -105,49 +66,12 @@
     },
     {
       "pass": 3,
-      "before": 959,
-      "unfit_before": 9,
-      "merged": 7,
-      "violations": [
-        {
-          "id": 945,
-          "cause": "no_compatible_neighbor",
-          "area": 25
-        },
-        {
-          "id": 485,
-          "cause": "protect_important_eye_color_shape",
-          "area": 89
-        }
-      ]
-    },
-    {
-      "pass": 4,
-      "before": 953,
-      "unfit_before": 3,
-      "merged": 2,
-      "violations": [
-        {
-          "id": 482,
-          "cause": "protect_important_eye_color_shape",
-          "area": 89
-        }
-      ]
-    },
-    {
-      "pass": 5,
-      "before": 951,
-      "unfit_before": 1,
-      "merged": 0,
-      "violations": [
-        {
-          "id": 481,
-          "cause": "protect_important_eye_color_shape",
-          "area": 89
-        }
-      ]
+      "before": 955,
+      "unfit_before": 4,
+      "merged": 4,
+      "violations": []
     }
   ],
   "visual_approval": "PENDING",
-  "status": "NEEDS_ART_REVIEW"
+  "status": "PASS_NUMBERING"
 }
