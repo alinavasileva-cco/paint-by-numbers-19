@@ -130,6 +130,13 @@ def run():
     base=Image.fromarray(work).convert("RGBA")
     preview=Image.alpha_composite(base,digits).convert("RGB")
     preview.save(OUT/"lineart_numbered.png")
+    # Enlarged proof images do not alter print glyph size; only zoom for QA.
+    for name,bounds,zoom in [
+        ("face_detail_numbered.png",(300,570,870,1220),3),
+        ("eyes_detail_numbered.png",(320,630,800,940),4),
+    ]:
+        fragment=preview.crop(bounds)
+        fragment.resize((fragment.width*zoom,fragment.height*zoom),Image.Resampling.LANCZOS).save(OUT/name)
     Image.fromarray(colored).save(OUT/"color_assignment_review.png")
     Image.fromarray(work).save(OUT/"lineart_corrected.png")
     with io.BytesIO() as png:
