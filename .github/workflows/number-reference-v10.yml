@@ -5,6 +5,7 @@ on:
     branches: [art-v10-numbering-user-approved-lineart]
     paths:
       - 'experiments/number_approved_lineart_v10.py'
+      - 'experiments/export_approved_v10_pdfs.py'
       - 'face_reference_v10/approved_lineart_group4.tif'
       - '.github/workflows/number-reference-v10.yml'
 jobs:
@@ -18,9 +19,11 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install existing image processing dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt 'reportlab>=4.2,<5' 'pypdf>=5,<7'
       - name: Number user's approved exact-threshold contours (5.3pt)
         run: python experiments/number_approved_lineart_v10.py
+      - name: Export lossless numbered PDF and color plus indexed palette PDF
+        run: python experiments/export_approved_v10_pdfs.py
       - name: Always save visual proof and detailed audit
         if: always()
         uses: actions/upload-artifact@v4
