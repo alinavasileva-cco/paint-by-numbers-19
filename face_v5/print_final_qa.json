@@ -1,0 +1,214 @@
+{
+  "base": "review_art_v4/lineart_soft_review.svg",
+  "initial_print_label_outline_overlap_px": 89,
+  "result_print_label_outline_overlap_px": 0,
+  "modified_label_count": 18,
+  "modifications": [
+    {
+      "region_id": 866,
+      "delta_screen_pixels": [
+        -2,
+        0
+      ],
+      "delta_mm": [
+        -0.333,
+        0.0
+      ]
+    },
+    {
+      "region_id": 516,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 531,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 6,
+      "delta_screen_pixels": [
+        1,
+        -4
+      ],
+      "delta_mm": [
+        0.167,
+        -0.667
+      ]
+    },
+    {
+      "region_id": 460,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 822,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 830,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 916,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 220,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 465,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 44,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 240,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 181,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 200,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 703,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 7,
+      "delta_screen_pixels": [
+        -1,
+        0
+      ],
+      "delta_mm": [
+        -0.167,
+        0.0
+      ]
+    },
+    {
+      "region_id": 842,
+      "delta_screen_pixels": [
+        0,
+        -1
+      ],
+      "delta_mm": [
+        0.0,
+        -0.167
+      ]
+    },
+    {
+      "region_id": 872,
+      "delta_screen_pixels": [
+        -1,
+        0
+      ],
+      "delta_mm": [
+        -0.167,
+        0.0
+      ]
+    }
+  ],
+  "uncorrected_labels": [],
+  "centers_outside_own_region": [],
+  "labels_total": 944,
+  "original_pigment_regions": 944,
+  "font_size_pt": 5.3,
+  "line_width_mm": 0.2,
+  "source_png_unchanged": true,
+  "status": "PASS"
+}
