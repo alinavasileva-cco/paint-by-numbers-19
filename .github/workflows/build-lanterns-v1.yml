@@ -1,4 +1,5 @@
 name: Build approved lanterns paint-by-numbers
+# v1 verified source pipeline
 
 on:
   push:
