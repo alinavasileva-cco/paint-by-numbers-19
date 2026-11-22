@@ -65,73 +65,63 @@ def simplify_microcolor(indexed,editable):
     return result
 
 def redraw_features(work,numidx):
+    """Artist-directed, *compact* anime eyes, no exaggerated pale ovals.
+
+    Preserve the real ear and face silhouette from the old painting. Simplify
+    colors within the eyelids; the pupil is preprinted dark ink, not a tiny
+    unnumberable pigment island. Bright orange iris remains a painted field.
+    """
     h,w=work.shape
     revised=work.copy()
     color=lambda num:numidx[num]
-    # Draw face's expressive eye silhouettes WITHOUT pale white cartoon ovals.
-    # The visible eye is an angular almond, with terracotta iris and real
-    # dark pupil. Small details can also be retained as printed line art.
     eyes=[
-      ("near", (549,390),[
-         ("C",(562,384),(579,382),(592,391)),
-         ("C",(597,394),(599,400),(589,403)),
-         ("C",(572,408),(554,404),(549,390))]),
-      ("far", (627,386),[
-         ("C",(636,381),(649,380),(660,385)),
-         ("C",(664,389),(663,394),(657,396)),
-         ("C",(643,401),(633,397),(627,386))])
+      ("near",(552,391),[
+          ("C",(560,386),(574,383),(584,388)),
+          ("C",(592,391),(592,398),(585,403)),
+          ("C",(573,406),(559,404),(552,391))]),
+      ("far",(636,387),[
+          ("C",(642,382),(654,382),(661,388)),
+          ("C",(664,394),(662,397),(658,399)),
+          ("C",(648,400),(639,397),(636,387))])
     ]
-    eye_masks={}
-    for name,start,seg in eyes:
-        m=path_mask((h,w),start,seg)
-        # Brown tinted eyeball, not bright cream ellipse.
-        revised[m]=color(13)
-        eye_masks[name]=m
-    # Curved iris, with its dark pupil near outer corner. Color 14 / 4 from
-    # fixed palette, no brand-new shade or standalone highlight particles.
-    for name,(cx,cy,rx,ry),(px,py,prx,pry) in [
-      ("near",(581,393,13,11),(589,395,6,7)),
-      ("far",(650,388,11,10),(657,390,5,7))
+    masks={}
+    for name,start,segments in eyes:
+        area=path_mask((h,w),start,segments)
+        revised[area]=color(11)  # dark muted eyelid shadow, not white eye
+        masks[name]=area
+    # One coherent natural iris in each eye, still individually numberable.
+    for name,(cx,cy,radiusx,radiusy) in [
+        ("near",(576,396,11,10)),
+        ("far",(651,390,9,9))
     ]:
         iris=np.zeros((h,w),np.uint8)
-        pupil=np.zeros((h,w),np.uint8)
-        cv2.ellipse(iris,(cx,cy),(rx,ry),-7,0,360,1,-1)
-        cv2.ellipse(pupil,(px,py),(prx,pry),-6,0,360,1,-1)
-        m=eye_masks[name]
-        revised[(iris>0)&m]=color(14)
-        revised[(pupil>0)&m]=color(4)
-    # Ear restored as a distinct, coherent shape and large shading mass.
-    ear=path_mask((h,w),(469,406),[
-       ("C",(482,397),(494,402),(499,414)),
-       ("C",(505,428),(494,446),(482,446)),
-       ("C",(467,440),(460,419),(469,406))])
-    revised[ear]=color(15)
-    ear_shadow=path_mask((h,w),(476,412),[
-       ("C",(486,404),(494,413),(491,427)),
-       ("C",(487,437),(477,437),(472,424)),
-       ("C",(470,420),(472,415),(476,412))])
-    revised[ear_shadow&ear]=color(13)
-    return revised,eye_masks,ear
+        cv2.ellipse(iris,(cx,cy),(radiusx,radiusy),-8,0,360,1,-1)
+        revised[(iris>0)&masks[name]]=color(14)
+    # A black pupil and upper lash are applied as fine printed ink:
+    # they do not leave unnumbered tiny paint fragments in the color map.
+    return revised,masks,np.zeros((h,w),np.bool_)
 
 # Printed ink, not additional color fields. Every pigment remains numbered.
 INK_PATHS=[
- ("upper_lash_near",[(550,391),(565,382),(583,381),(595,391)],.34),
- ("lower_lash_near",[(551,396),(567,408),(585,406),(595,399)],.22),
- ("upper_lash_far",[(628,387),(636,379),(651,378),(662,387)],.34),
- ("lower_lash_far",[(628,389),(641,399),(652,399),(661,392)],.20),
- ("nose_bridge",[(651,401),(650,416),(659,423),(653,431)],.25),
- ("nostril",[(653,430),(651,432),(648,433),(646,432)],.18),
- ("upper_lip",[(648,444),(651,448),(646,450),(642,449)],.21),
- ("mouth_slit",[(645,452),(642,455),(637,455),(634,454)],.23),
- ("lower_lip",[(643,458),(639,462),(635,462),(633,461)],.16),
- ("jaw",[(643,462),(645,474),(632,485),(618,489)],.20),
- ("ear_fold",[(478,410),(486,405),(492,415),(487,427)],.20),
- ("ear_fold_2",[(488,426),(480,434),(478,424),(483,419)],.16),
- # A few purposeful continuous strands rather than hundreds of scraps.
- ("fringe_a",[(536,340),(539,365),(548,375),(553,385)],.20),
- ("fringe_b",[(571,328),(579,351),(588,363),(592,378)],.19),
- ("fringe_c",[(607,335),(615,358),(621,371),(628,383)],.18),
+ ("upper_lash_near",[(552,391),(561,383),(579,382),(590,391)],.31),
+ ("lower_lash_near",[(554,396),(565,406),(577,406),(589,401)],.18),
+ ("upper_lash_far",[(637,387),(643,381),(655,383),(662,390)],.30),
+ ("lower_lash_far",[(638,392),(647,400),(655,398),(661,394)],.17),
+ # Curved pupil slits inside painted iris, not new paint cells.
+ ("near_pupil",[(580,389),(583,394),(582,399),(579,402)],.30),
+ ("far_pupil",[(655,387),(658,392),(657,396),(655,398)],.28),
+ # Face edge, simple deliberate contour rather than pixel crumbs.
+ ("nose_bridge",[(648,404),(650,416),(658,423),(652,432)],.20),
+ ("nose_tip",[(654,431),(651,433),(648,433),(647,431)],.14),
+ ("lip_upper",[(648,445),(651,448),(645,451),(640,449)],.16),
+ ("lip_slit",[(644,451),(642,454),(638,455),(635,454)],.19),
+ ("chin",[(642,466),(642,476),(632,485),(620,489)],.18),
+ # Retain original external ear shape: only one slim interior contour.
+ ("ear_fold",[(476,412),(486,407),(491,416),(487,428)],.16),
+ ("fringe_a",[(538,344),(540,363),(548,376),(554,384)],.13),
+ ("fringe_b",[(578,338),(585,354),(591,369),(593,381)],.14)
 ]
+
 def svg_ink(scale,xoff,yoff):
     def xy(p):return f"{xoff+(p[0]+.5)*scale:.4f},{yoff+(p[1]+.5)*scale:.4f}"
     return "\n".join(
@@ -167,8 +157,8 @@ def merge_until_all_numbered(idx,editable,eye_masks,palette,numbers,scale):
                 continue
             # Keep the main cheek, iris and pupil; avoid obliterating gaze.
             in_eye=sum(int(np.count_nonzero(component&m)) for m in eye_masks.values())
-            if in_eye>0 and in_eye >= int(areas[rid])*.60 and areas[rid]>=25:
-                violations.append({"id":rid,"cause":"eye_feature_too_small_to_number",
+            if in_eye>0 and in_eye >= int(areas[rid])*.60 and areas[rid]>=55:
+                violations.append({"id":rid,"cause":"protect_important_eye_color_shape",
                                    "area":int(areas[rid])})
                 continue
             a=int(rcolors[rid])
@@ -179,9 +169,13 @@ def merge_until_all_numbered(idx,editable,eye_masks,palette,numbers,scale):
                 d=float(np.linalg.norm(lab[a]-lab[c]))
                 eye_neighbor=int(np.count_nonzero((ids==nb)&(eye_masks["near"]|eye_masks["far"])))
                 # A poor match can make hair and facial skin collapse together.
-                if d>100 and areas[rid]>20:continue
+                if d>110 and areas[rid]>20:continue
+                # Every merge must reduce graph complexity. Never swap
+                # two unfit neighbors of equal size in consecutive passes.
+                if not fits[nb] and int(areas[nb])<=int(areas[rid]):
+                    continue
                 score=d*2.5+90/(edge+1)-min(edge*.08,8)
-                if fits[nb]:score-=18
+                if fits[nb]:score-=35
                 if areas[nb]>=areas[rid]*2:score-=8
                 if eye_neighbor and not in_eye:score+=90
                 if in_eye and eye_neighbor:score-=30
@@ -199,7 +193,7 @@ def merge_until_all_numbered(idx,editable,eye_masks,palette,numbers,scale):
             raise RuntimeError("Outside-face pixels touched by merge")
         report.append({"pass":step+1,"before":int(ids.max()),"unfit_before":len(failing),
              "merged":len(ids_to_color),"violations":violations[:40]})
-        if not ids_to_color:break
+        if not ids_to_color or np.array_equal(updated,work):break
         work=updated
     return work,report,False
 
@@ -271,6 +265,14 @@ def final_art():
       "regions_without_number":len(missing),
       "label_fit_failed_regions":len(missing),
       "unfit_ids":missing[:200],
+      "unfit_details":[{"id":rid,
+         "color_number":int(numbers[int(rcolors[rid])]),
+         "area_px":int(area[rid]),
+         "bbox":[int(np.where(ids==rid)[1].min()),
+                 int(np.where(ids==rid)[0].min()),
+                 int(np.where(ids==rid)[1].max()),
+                 int(np.where(ids==rid)[0].max())]}
+           for rid in missing[:200]],
       "all_regions_numbered":not bool(missing),
       "disconnected_region_ids":[],
       "pixels_without_color_assignment":int(np.count_nonzero(ids==0)),
