@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "source": "full_color_v11.png",
+  "regions_total": 780,
+  "regions_numbered": 780,
+  "regions_without_number": 0,
+  "font_pt": 5.3,
+  "stroke_mm": 0.2,
+  "colors_total": 19,
+  "width_mm": 400.0,
+  "height_mm": 499.82,
+  "original_composite_px": [
+    2244,
+    2804
+  ],
+  "paint_grid_px": [
+    1122,
+    1402
+  ],
+  "modified_pixels_by_numberability": 76932,
+  "modified_fraction_by_numberability": 0.04891,
+  "regions_iterations": [
+    {
+      "iteration": 1,
+      "regions_total": 1015,
+      "numbered": 794,
+      "without_number": 221
+    },
+    {
+      "iteration": 2,
+      "regions_total": 782,
+      "numbered": 780,
+      "without_number": 2
+    },
+    {
+      "iteration": 3,
+      "regions_total": 780,
+      "numbered": 780,
+      "without_number": 0
+    }
+  ],
+  "segments": 4073,
+  "lineart_pdf_pages": 1,
+  "colored_pdf_pages": 2
+}

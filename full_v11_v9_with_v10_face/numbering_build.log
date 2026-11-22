@@ -1,10 +1,1 @@
-Traceback (most recent call last):
-  File "/home/runner/work/paint-by-numbers-19/paint-by-numbers-19/experiments/full_v11_numbers.py", line 167, in <module>
-    if __name__=='__main__':main()
-                            ^^^^^^
-  File "/home/runner/work/paint-by-numbers-19/paint-by-numbers-19/experiments/full_v11_numbers.py", line 126, in main
-    cleaned,labels,history,bycolor=merge_unfit(indexed,px_to_mm)
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/paint-by-numbers-19/paint-by-numbers-19/experiments/full_v11_numbers.py", line 85, in merge_unfit
-    raise RuntimeError(f'Cannot print all regions with 5.3 pt: {len(fail)} remain, of {regions}')
-RuntimeError: Cannot print all regions with 5.3 pt: 16 remain, of 803
+NUMBERED_ALL {"status": "PASS", "source": "full_color_v11.png", "regions_total": 780, "regions_numbered": 780, "regions_without_number": 0, "font_pt": 5.3, "stroke_mm": 0.2, "colors_total": 19, "width_mm": 400.0, "height_mm": 499.82, "original_composite_px": [2244, 2804], "paint_grid_px": [1122, 1402], "modified_pixels_by_numberability": 76932, "modified_fraction_by_numberability": 0.04891, "segments": 4073, "lineart_pdf_pages": 1, "colored_pdf_pages": 2}
