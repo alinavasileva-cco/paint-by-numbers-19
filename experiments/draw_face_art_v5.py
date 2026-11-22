@@ -124,25 +124,25 @@ def redraw_indexed(base_map,palette,numbers):
     # computer-generated color stripes. Each pigment remains an independently
     # measurable paint field carrying a real 5.3pt number.
     near_eye=shape_canvas(h,w,[
-      ("M",(543,392)),
-      ("C",((559,381),(577,378),(593,387))),
-      ("C",((606,391),(608,398),(602,401))),
-      ("C",((585,414),(557,411),(546,401))),
-      ("C",((543,398),(542,395),(543,392)))
+      ("M",(545,394)),
+      ("C",((557,385),(579,382),(592,388))),
+      ("C",((600,393),(600,396),(596,399))),
+      ("C",((582,405),(560,404),(548,399))),
+      ("C",((545,397),(544,395),(545,394)))
     ])
     far_eye=shape_canvas(h,w,[
-      ("M",(623,386)),
-      ("C",((633,377),(646,373),(658,380))),
-      ("C",((669,386),(668,393),(660,396))),
-      ("C",((645,403),(630,397),(623,386)))
+      ("M",(621,389)),
+      ("C",((630,381),(644,379),(657,383))),
+      ("C",((666,388),(666,393),(660,396))),
+      ("C",((646,402),(630,399),(621,389)))
     ])
     fill_named(work,near_eye,"sclera",colors)
     fill_named(work,far_eye,"sclera",colors)
     # Lopsided painted iris disks leave generous near-left eye whites.
     iris_a=np.zeros((h,w),np.uint8)
     iris_b=np.zeros((h,w),np.uint8)
-    cv2.ellipse(iris_a,(582,396),(18,13),-10,0,360,255,thickness=-1)
-    cv2.ellipse(iris_b,(650,387),(13,12),-10,0,360,255,thickness=-1)
+    cv2.ellipse(iris_a,(579,393),(16,10),-12,0,360,255,thickness=-1)
+    cv2.ellipse(iris_b,(648,390),(14,9),-12,0,360,255,thickness=-1)
     iris_a=(iris_a>0)&near_eye
     iris_b=(iris_b>0)&far_eye
     fill_named(work,iris_a,"iris",colors)
@@ -150,14 +150,14 @@ def redraw_indexed(base_map,palette,numbers):
     # Offset, dark almond-shaped pupils: real palette color 4, not unnumbered
     # decorative dots. Direction of gaze matches the rightward profile.
     pupil_a=shape_canvas(h,w,[
-      ("M",(588,389)),("C",((592,386),(598,391),(599,396))),
-      ("C",((600,402),(596,406),(590,404))),
-      ("C",((587,400),(587,393),(588,389)))
+      ("M",(586,388)),("C",((591,387),(594,391),(594,395))),
+      ("C",((593,400),(588,402),(585,398))),
+      ("C",((583,394),(583,390),(586,388)))
     ])&iris_a
     pupil_b=shape_canvas(h,w,[
-      ("M",(655,382)),("C",((660,382),(662,386),(662,390))),
-      ("C",((661,395),(656,396),(653,391))),
-      ("C",((652,387),(653,384),(655,382)))
+      ("M",(653,385)),("C",((658,383),(661,388),(661,392))),
+      ("C",((660,396),(655,399),(652,394))),
+      ("C",((651,391),(651,387),(653,385)))
     ])&iris_b
     fill_named(work,pupil_a,"dark",colors)
     fill_named(work,pupil_b,"dark",colors)
@@ -251,24 +251,26 @@ def local_fit_merge(work,palette,numbers,scale,masks,max_rounds=35):
     raise RuntimeError("Local face repair did not reach zero unnumbered areas")
 
 def ink_segments():
-    # Only printed BLACK linework: no standalone unnumbered pigment islands.
-    # Coordinates (px) are constructed as graceful Bézier segments.
+    # The upper eyelids form sharp dark almond slits; pigment remains flat,
+    # numbered and separate underneath. Neither lashes nor nose/lips is a
+    # new paint region requiring an impossible extra 5.3pt number.
     return [
-      # Main eye: sharpened upper and lower slit, separate eyelid contour
-      ("upper_eye",[(548,391),(563,380),(584,381),(598,394)],.28),
-      ("lower_eye",[(550,398),(564,410),(582,410),(598,400)],.21),
-      ("upper_eyelid",[(550,385),(564,378),(583,375),(595,385)],.17),
-      ("outer_lash",[(596,392),(604,389),(607,385),(610,380)],.22),
-      # Far eye: stronger slit for correct anime profile
-      ("far_upper",[(626,387),(636,376),(649,374),(660,384)],.27),
-      ("far_lower",[(629,390),(640,401),(650,398),(660,390)],.19),
-      # The facial edge is not redrawn across hair; just nose & mouth.
-      ("nose_bridge",[(649,400),(649,413),(658,425),(652,429)],.24),
-      ("nostril",[(652,429),(650,432),(647,432),(646,431)],.17),
-      ("upper_lip",[(645,444),(650,445),(654,449),(647,449)],.24),
-      ("mouth_slit",[(646,452),(641,452),(637,456),(634,455)],.20),
-      ("lower_lip",[(642,460),(640,462),(635,464),(633,462)],.15),
-      ("chin_profile",[(639,463),(640,478),(624,487),(607,490)],.22),
+      ("brow_near",[(549,379),(561,372),(580,372),(592,380)],.28),
+      ("upper_eye",[(546,393),(559,383),(584,382),(598,391)],.52),
+      ("lower_eye",[(549,399),(562,405),(582,407),(597,400)],.23),
+      ("outer_lash",[(594,390),(604,388),(607,384),(609,381)],.39),
+      ("brow_far",[(628,376),(637,372),(648,373),(657,379)],.23),
+      ("far_upper",[(622,388),(633,380),(650,379),(661,386)],.48),
+      ("far_lower",[(624,391),(636,401),(650,403),(662,396)],.21),
+      ("far_lash",[(657,384),(664,380),(669,379),(672,375)],.26),
+      ("ear_outer_fold",[(469,414),(472,406),(487,405),(490,418)],.24),
+      ("ear_inner_fold",[(490,420),(491,435),(477,433),(477,425)],.20),
+      ("nose_bridge",[(649,400),(649,414),(658,425),(652,429)],.28),
+      ("nostril",[(652,429),(650,432),(647,432),(646,431)],.19),
+      ("upper_lip",[(645,444),(650,445),(654,449),(647,449)],.28),
+      ("mouth_slit",[(646,452),(641,452),(637,456),(634,455)],.32),
+      ("lower_lip",[(642,460),(640,462),(635,464),(633,462)],.18),
+      ("chin_profile",[(639,463),(640,478),(624,487),(607,490)],.25),
     ]
 
 def svg_ink(scale,xoff,yoff):
@@ -286,7 +288,7 @@ def ink_preview(palette_rgb):
     for name,(a,b,c,d),weight in ink_segments():
         v=bezier(a,b,c,d,n=64)
         cv2.polylines(rgb,[np.rint(v).astype(np.int32).reshape(-1,1,2)],False,
-                      (24,16,27),thickness=1,lineType=cv2.LINE_8)
+                      (24,16,27),thickness=(2 if name in ("upper_eye","far_upper") else 1),lineType=cv2.LINE_8)
     return rgb
 
 def build(out):
