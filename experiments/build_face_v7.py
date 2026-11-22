@@ -79,10 +79,10 @@ def redraw_features(work,numidx):
           ("C",(560,386),(574,383),(584,388)),
           ("C",(592,391),(592,398),(585,403)),
           ("C",(573,406),(559,404),(552,391))]),
-      ("far",(636,387),[
-          ("C",(642,382),(654,382),(661,388)),
-          ("C",(664,394),(662,397),(658,399)),
-          ("C",(648,400),(639,397),(636,387))])
+      ("far",(626,387),[
+          ("C",(634,381),(651,379),(662,386)),
+          ("C",(667,390),(665,396),(659,399)),
+          ("C",(645,402),(630,398),(626,387))])
     ]
     masks={}
     for name,start,segments in eyes:
@@ -92,7 +92,7 @@ def redraw_features(work,numidx):
     # One coherent natural iris in each eye, still individually numberable.
     for name,(cx,cy,radiusx,radiusy) in [
         ("near",(576,396,11,10)),
-        ("far",(651,390,9,9))
+        ("far",(650,390,10,9))
     ]:
         iris=np.zeros((h,w),np.uint8)
         cv2.ellipse(iris,(cx,cy),(radiusx,radiusy),-8,0,360,1,-1)
@@ -103,13 +103,13 @@ def redraw_features(work,numidx):
 
 # Printed ink, not additional color fields. Every pigment remains numbered.
 INK_PATHS=[
- ("upper_lash_near",[(552,391),(561,383),(579,382),(590,391)],.31),
+ ("upper_lash_near",[(551,390),(564,380),(582,381),(593,393)],.40),
  ("lower_lash_near",[(554,396),(565,406),(577,406),(589,401)],.18),
- ("upper_lash_far",[(637,387),(643,381),(655,383),(662,390)],.30),
- ("lower_lash_far",[(638,392),(647,400),(655,398),(661,394)],.17),
+ ("upper_lash_far",[(626,387),(640,378),(651,381),(663,387)],.39),
+ ("lower_lash_far",[(630,392),(643,401),(656,401),(663,393)],.17),
  # Curved pupil slits inside painted iris, not new paint cells.
- ("near_pupil",[(580,389),(583,394),(582,399),(579,402)],.30),
- ("far_pupil",[(655,387),(658,392),(657,396),(655,398)],.28),
+ ("near_pupil",[(581,389),(585,392),(586,398),(582,402)],.56),
+ ("far_pupil",[(655,386),(659,388),(659,394),(656,397)],.51),
  # Face edge, simple deliberate contour rather than pixel crumbs.
  ("nose_bridge",[(648,404),(650,416),(658,423),(652,432)],.20),
  ("nose_tip",[(654,431),(651,433),(648,433),(647,431)],.14),
