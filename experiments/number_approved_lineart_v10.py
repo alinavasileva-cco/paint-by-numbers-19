@@ -75,6 +75,16 @@ def run():
     n,region,stats,_=components(ink)
     if n-1!=len(NUMBERS):raise RuntimeError(f"Expected 87 paintable zones, got {n-1}")
     assert len(NUMBERS)==len(CONFIDENCE)
+    # User-approved local fix: the narrow cheek segment immediately BELOW
+    # the right-side eye belongs to the skin (17), not highlight (19).
+    # Resolve it by a stable pixel in the approved 1122x1402 reference:
+    # this changes exactly ONE connected region; the other 19s stay as-is.
+    cheek_x,cheek_y=755,850
+    cheek_region=int(region[cheek_y,cheek_x])
+    numbers=NUMBERS.copy()
+    if cheek_region<=0 or numbers[cheek_region-1]!=19:
+        raise RuntimeError(f"V10 cheek selector is not a color-19 region: id={cheek_region}")
+    numbers[cheek_region-1]=17
     with (ROOT/"review/palette.csv").open(encoding="utf-8-sig") as f:
         palette={int(d["Номер"]):tuple(int(d[k]) for k in ("R","G","B")) for d in csv.DictReader(f)}
     if len(palette)!=19:raise RuntimeError("Palette is not 19 original colors")
@@ -91,7 +101,7 @@ def run():
     failures=[]
     occupied=np.zeros((H,W),np.uint8)
     for rid in range(1,n):
-        number=NUMBERS[rid-1]
+        number=numbers[rid-1]
         colored[region==rid]=palette[number]
         x,y,bw,bh,area=map(int,stats[rid])
         cell=(region[y:y+bh,x:x+bw]==rid).astype(np.uint8)
@@ -145,7 +155,7 @@ def run():
     svg=[f'<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH_MM}mm" height="{WIDTH_MM*H/W:.4f}mm" viewBox="0 0 {W} {H}">',
          f'<image width="{W}" height="{H}" href="data:image/png;base64,{embedded}"/>']
     for rid,(px,py) in placed.items():
-        svg.append(f'<text x="{px}" y="{py}" font-size="{FONT_PT}pt" font-family="DejaVu Sans" text-anchor="middle" dominant-baseline="central" fill="#18101B">{NUMBERS[rid-1]}</text>')
+        svg.append(f'<text x="{px}" y="{py}" font-size="{FONT_PT}pt" font-family="DejaVu Sans" text-anchor="middle" dominant-baseline="central" fill="#18101B">{numbers[rid-1]}</text>')
     svg.append("</svg>")
     (OUT/"lineart_numbered.svg").write_text("\n".join(svg),encoding="utf-8")
     audit={"reference_sha256":sha,"original_antialiased_sha256":gray_sha,"original_input_unchanged":True,
@@ -154,7 +164,10 @@ def run():
            "regions_total":n-1,"regions_numbered":len(placed),
            "regions_without_number":len(failures),"unfit_region_ids":failures,
            "all_regions_numbered":not failures,"font_size_pt":FONT_PT,
-           "colors_total":len(palette),"colors_used":sorted(set(NUMBERS)),
+           "colors_total":len(palette),"colors_used":sorted(set(numbers)),
+           "manual_color_corrections":[{"region":cheek_region,"from":19,"to":17,
+                                        "reference_point_xy":[cheek_x,cheek_y],
+                                        "reason":"skin beneath right-side eye"}],
            "ambiguous_color_assignments_below_75pct":sum(v<.75 for v in CONFIDENCE),
            "color_assignments_review_required":True,
            "status":"REVIEW_REQUIRED" if any(v<.75 for v in CONFIDENCE) or failures else "PASS"}
