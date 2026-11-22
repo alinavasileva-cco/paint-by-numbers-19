@@ -11,16 +11,17 @@
   ],
   "colors_max": 19,
   "colors_actual": 19,
-  "modified_pixels": 69257,
-  "modified_fraction": 0.011007,
+  "modified_pixels": 71565,
+  "modified_fraction": 0.011374,
+  "skin_edge_extension_pixels": 2308,
   "v9_exact_unmodified_outside_face_in": "full_color_v11_source_composite.png",
   "printable_19_color_render": "full_color_v11.png",
-  "antialias_quantization_changed_pixels": 571772,
+  "antialias_quantization_changed_pixels": 571583,
   "changed_bbox_xyxy": [
     1034,
-    714,
+    682,
     1354,
-    999
+    1003
   ],
   "only_face_edited": true,
   "v10_under_right_eye_color": 17,
