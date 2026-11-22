@@ -51,7 +51,7 @@ def merge_unfit(indexed,px_to_mm):
     ncol=19
     pal=np.array([tuple(int(r[k]) for k in ('R','G','B')) for r in
       list(csv.DictReader((ROOT/'review/palette.csv').open(encoding='utf-8-sig'))) ],np.int32)
-    for iteration in range(1,41):
+    for iteration in range(1,101):
         ids,colors,sizes=label_components(state,ncol)
         labels,fail,regions,bycolor=create_labels(state,list(range(1,20)),px_to_mm,0,0)
         notes.append({'iteration':iteration,'regions_total':regions,
@@ -64,14 +64,29 @@ def merge_unfit(indexed,px_to_mm):
         touches=region_contacts(ids)
         desired=colors.copy()
         edits=0
+        # Stable neighbors are deliberately preferred. Earlier versions
+        # let two failing micro-regions swap their colors every iteration
+        # instead of joining, creating 16 permanent label failures.
         for reg in sorted(failing,key=lambda r:int(sizes[r])):
             neighbors=touches.get(reg,[])
             if not neighbors:continue
+            stable=[item for item in neighbors if item[0] not in failing]
+            if stable:
+                candidate=stable
+            else:
+                # Force directed merges within an all-unfit cluster:
+                # small cells join a larger (or lower-ID) anchor, NEVER
+                # let two micro-cells exchange their colors.
+                candidate=[item for item in neighbors
+                    if (sizes[item[0]]>sizes[reg] or
+                        (sizes[item[0]]==sizes[reg] and item[0]<reg))]
+                if not candidate:
+                    continue # this region is the cluster's stable anchor
             def score(item):
                 other,border=item
                 delta=np.linalg.norm(pal[int(colors[reg])]-pal[int(colors[other])])
                 return (border/(1+delta/80.),sizes[other],-delta)
-            target=max(neighbors,key=score)[0]
+            target=max(candidate,key=score)[0]
             if int(desired[reg])!=int(colors[target]):
                 desired[reg]=colors[target]
                 edits+=1
@@ -82,6 +97,7 @@ def merge_unfit(indexed,px_to_mm):
     # Failure is explicit, never publish incomplete numbered pages.
     ids,c,s=label_components(state,19)
     labels,fail,regions,bycolor=create_labels(state,list(range(1,20)),px_to_mm,0,0)
+    print('REGION_FIT_HISTORY',json.dumps(notes[-12:],ensure_ascii=False),flush=True)
     raise RuntimeError(f'Cannot print all regions with 5.3 pt: {len(fail)} remain, of {regions}')
 
 def palette_page(pdf,rows):
