@@ -1,0 +1,74 @@
+{
+  "reference_sha256": "a190de43574a70f35f52ddea1cb831e15a969b08a397238ddb7ad71943b90354",
+  "original_input_unchanged": true,
+  "derived_stroke_pixels_changed": 48,
+  "corrections": [
+    {
+      "region": 4,
+      "kind": "bridge_cropped_border",
+      "changed_pixels": 3
+    },
+    {
+      "region": 5,
+      "kind": "bridge_cropped_border",
+      "changed_pixels": 4
+    },
+    {
+      "region": 31,
+      "kind": "ink_pinholes",
+      "changed_pixels": 18
+    },
+    {
+      "region": 59,
+      "kind": "ink_pinholes",
+      "changed_pixels": 5
+    },
+    {
+      "region": 61,
+      "kind": "ink_pinholes",
+      "changed_pixels": 10
+    },
+    {
+      "region": 69,
+      "kind": "ink_pinholes",
+      "changed_pixels": 5
+    },
+    {
+      "region": 84,
+      "kind": "ink_pinholes",
+      "changed_pixels": 3
+    }
+  ],
+  "palette_used_from": "review/palette.csv",
+  "regions_total": 87,
+  "regions_numbered": 87,
+  "regions_without_number": 0,
+  "unfit_region_ids": [],
+  "all_regions_numbered": true,
+  "font_size_pt": 5.3,
+  "colors_total": 19,
+  "colors_used": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "ambiguous_color_assignments_below_75pct": 12,
+  "color_assignments_review_required": true,
+  "status": "REVIEW_REQUIRED"
+}
