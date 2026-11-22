@@ -1,0 +1,38 @@
+name: V7 check printable numbers against face art
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/repair_print_labels_face_v7.py
+      - .github/workflows/face-v7-print-qa.yml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python experiments/repair_print_labels_face_v7.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: face-v7-print-qa
+          path: |
+            face_v7/print_final_qa.json
+            face_v7/lineart_final_review.svg
+            face_v7/lineart_final_preview.png
+            face_v7/lineart_final_screen.png
+          retention-days: 14
+      - name: Save print-size report and candidate files in study branch
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v7/print_final_qa.json face_v7/lineart_final* || exit 0
+          git commit -m 'Audit exact 5.3pt digits against facial ink and smooth contours' || exit 0
+          git pull --rebase origin art-v7-face-local-cleanup
+          git push origin HEAD:art-v7-face-local-cleanup
