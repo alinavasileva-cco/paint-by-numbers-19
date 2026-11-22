@@ -14,6 +14,7 @@ from PIL import Image,ImageDraw,ImageFont
 
 ROOT=Path(__file__).resolve().parent.parent
 INPUT=ROOT/"face_reference_v10/approved_lineart_group4.tif"
+ORIGINAL_GRAY=ROOT/"face_reference_v10/approved_lineart_original_grayscale.png"
 OUT=ROOT/"face_reference_v10/output"
 OUT.mkdir(parents=True,exist_ok=True)
 
@@ -21,6 +22,7 @@ NUMBERS=[5,7,2,16,5,16,16,5,7,11,16,16,16,17,2,17,16,17,4,17,9,9,16,9,12,1,9,16,
 CONFIDENCE=[1.0,1.0,.817,.9415,.8305,1,1,.9168,1,1,1,.9918,1,.9752,.4698,.8899,.9995,.9702,.9983,.9445,.5974,.4742,1,.9537,.9658,1,.8944,1,1,1,1,1,1,1,1,1,1,1,.9362,.9792,.9045,.9998,.9902,1,.8035,.8038,.9669,1,.9267,.4259,.9654,.9885,.74,.9332,1,.7015,1,.8528,.5,.7827,.6128,1,.5796,.9953,.982,.9752,.8098,.9524,.7548,1,1,.983,.9576,.6138,.9388,.8986,.9461,.892,1,.9764,.9969,.8212,1,1,1,.6116,.7015]
 FONT_PT=5.3;WIDTH_MM=400;THRESH=150
 EXPECTED_INPUT_SHA256="a190de43574a70f35f52ddea1cb831e15a969b08a397238ddb7ad71943b90354"
+EXPECTED_GRAY_SHA256="f52728559cc7505ea1649de0e218e4f077ee36827bded3d09ca3f34a7aaf5cad"
 
 def components(ink):
     return cv2.connectedComponentsWithStats((~ink).astype("uint8"),connectivity=8)
@@ -59,8 +61,14 @@ def run():
     data=INPUT.read_bytes()
     sha=hashlib.sha256(data).hexdigest()
     if sha!=EXPECTED_INPUT_SHA256:raise RuntimeError("Approved lineart mask SHA mismatch")
-    gray=np.asarray(Image.open(INPUT).convert("L"))
+    gray_source=ORIGINAL_GRAY.read_bytes()
+    gray_sha=hashlib.sha256(gray_source).hexdigest()
+    if gray_sha!=EXPECTED_GRAY_SHA256:raise RuntimeError("Original antialiased user reference checksum mismatch")
+    gray=np.asarray(Image.open(ORIGINAL_GRAY).convert("L"))
+    segmented=np.asarray(Image.open(INPUT).convert("L"))
     H,W=gray.shape
+    if segmented.shape!=gray.shape or not np.array_equal(gray<THRESH,segmented<THRESH):
+        raise RuntimeError("Segmentation mask does not match approved antialiased artwork")
     if (W,H)!=(1122,1402):raise RuntimeError("Incorrect reference dimensions")
     original_ink=gray<THRESH
     ink,corrections=fix_unprintable(original_ink)
@@ -70,7 +78,7 @@ def run():
     with (ROOT/"review/palette.csv").open(encoding="utf-8-sig") as f:
         palette={int(d["Номер"]):tuple(int(d[k]) for k in ("R","G","B")) for d in csv.DictReader(f)}
     if len(palette)!=19:raise RuntimeError("Palette is not 19 original colors")
-    work=np.asarray(Image.open(INPUT).convert("RGB")).copy()
+    work=np.asarray(Image.open(ORIGINAL_GRAY).convert("RGB")).copy()
     work[(ink)&(~original_ink)]=0
     work[(~ink)&(original_ink)]=255
     # White ink-proof and an indexed color check drawn with the exact same segmentation.
@@ -133,7 +141,7 @@ def run():
         svg.append(f'<text x="{px}" y="{py}" font-size="{FONT_PT}pt" font-family="DejaVu Sans" text-anchor="middle" dominant-baseline="central" fill="#18101B">{NUMBERS[rid-1]}</text>')
     svg.append("</svg>")
     (OUT/"lineart_numbered.svg").write_text("\n".join(svg),encoding="utf-8")
-    audit={"reference_sha256":sha,"original_input_unchanged":True,
+    audit={"reference_sha256":sha,"original_antialiased_sha256":gray_sha,"original_input_unchanged":True,
            "derived_stroke_pixels_changed":int(np.count_nonzero(ink!=original_ink)),
            "corrections":corrections,"palette_used_from":"review/palette.csv",
            "regions_total":n-1,"regions_numbered":len(placed),
