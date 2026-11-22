@@ -1,0 +1,27 @@
+name: V8 final face comparison for approval
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/face_v8_visual_compare.py
+      - .github/workflows/face-v8-visual-compare.yml
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pillow
+      - run: python experiments/face_v8_visual_compare.py
+      - name: Commit comparison only on V8 branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v8/face_before_after_final.png face_v8/face_detail_final.png
+          git commit -m 'Add zoomed original-to-V8 face comparison' || exit 0
+          git pull --rebase origin art-v8-face-natural
+          git push origin HEAD:art-v8-face-natural
