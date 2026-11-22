@@ -1,0 +1,69 @@
+{
+  "status": "REVIEW_REQUIRED",
+  "composition": "V9 exact pixels outside face matte",
+  "base_v9_path": "face_v9_color_only/portrait_v9_smooth_preview.png",
+  "base_v9_sha256": "10d1894112c45707542ed1e0c39dde574b0e84a9465d9710bf5fb1690099be0c",
+  "approved_v10_path": "face_reference_v10/output/color_assignment_review.png",
+  "approved_v10_sha256": "a7f77665db186586fdbd8327ee0e7da05d731c8cdf010b279156fb9987e8c1d7",
+  "original_dimensions": [
+    2244,
+    2804
+  ],
+  "colors_max": 19,
+  "colors_actual": 19,
+  "modified_pixels": 69257,
+  "modified_fraction": 0.011007,
+  "v9_exact_unmodified_outside_face_in": "full_color_v11_source_composite.png",
+  "printable_19_color_render": "full_color_v11.png",
+  "antialias_quantization_changed_pixels": 571772,
+  "changed_bbox_xyxy": [
+    1034,
+    714,
+    1354,
+    999
+  ],
+  "only_face_edited": true,
+  "v10_under_right_eye_color": 17,
+  "source_landmarks": [
+    [
+      515,
+      822
+    ],
+    [
+      730,
+      770
+    ],
+    [
+      720,
+      1052
+    ]
+  ],
+  "target_landmarks": [
+    [
+      1142,
+      771
+    ],
+    [
+      1300,
+      766
+    ],
+    [
+      1281,
+      912
+    ]
+  ],
+  "affine": [
+    [
+      0.7236701463982699,
+      -0.042157087007153524,
+      804.6817501247713
+    ],
+    [
+      0.10437452398467378,
+      0.5234627629294208,
+      287.0607046058466
+    ]
+  ],
+  "approved_full_art": false,
+  "note": "Automated compositing proof. Requires visual QA before releasing as final paint-by-numbers."
+}
