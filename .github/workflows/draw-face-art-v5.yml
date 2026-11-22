@@ -27,12 +27,12 @@ jobs:
           name: face-redrawn-numbered-v5
           path: face_v5/
           retention-days: 14
-      - name: Publish experiment, never overwrite approved main artwork
-        if: success()
+      - name: Publish diagnostics and successful experiment only on this branch
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add face_v5
+          git add face_v5 || exit 0
           git commit -m 'Add user-requested hand-directed face and numbering proof' || exit 0
           git pull --rebase origin art-face-redraw-numbered-v5
           git push origin HEAD:art-face-redraw-numbered-v5
