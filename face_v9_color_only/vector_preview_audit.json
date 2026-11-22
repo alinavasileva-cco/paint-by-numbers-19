@@ -1,0 +1,15 @@
+{
+  "source_art": "face_v9_color_only/portrait_v9_color.png",
+  "recolored_face_vector_pigments": {
+    "4": "#18101B",
+    "11": "#754045",
+    "13": "#9A534C",
+    "14": "#C44F2D",
+    "15": "#C6725B",
+    "18": "#FDCE6F",
+    "19": "#FDEDB3"
+  },
+  "face_only_view": "vector overlay in x456..675 y344..512",
+  "outside_face_source": "unchanged native indexed color map",
+  "numbering_started": false
+}
