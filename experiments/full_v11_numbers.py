@@ -128,7 +128,7 @@ def main():
          '<rect width="100%" height="100%" fill="white"/>',
          f'<path d="{paths}" fill="none" stroke="#18101B" stroke-width="{STROKE_MM}" stroke-linecap="round" stroke-linejoin="round"/>']
     for number,x,y in labels:
-        svg.append(f'<text x="{x:.3f}" y="{y:.3f}" font-family="DejaVu Sans" font-size="{FONT_PT}pt" text-anchor="middle" dominant-baseline="central" fill="#18101B">{number}</text>')
+        svg.append(f'<text x="{x:.3f}" y="{y:.3f}" font-family="DejaVu Sans" font-size="{FONT_PT*25.4/72.0:.4f}" text-anchor="middle" dominant-baseline="central" fill="#18101B">{number}</text>')
     svg.append('</svg>')
     svg_path=DIR/'full_lineart_numbered.svg'
     svg_path.write_text('\n'.join(svg),encoding='utf-8')
