@@ -21,8 +21,9 @@ from reportlab.pdfbase.ttfonts import TTFont as PDFTrueType
 from reportlab.pdfgen import canvas
 from scipy.spatial import cKDTree
 
-from face_transfer import DETAIL_PATHS, OFFSET, PATCH, REFERENCE_SHA, SCALE, transfer_face
+from face_transfer import PATCH, REFERENCE_SHA, transfer_face
 from geometry import components, contacts, open_narrow_fields, region_rings, svg_paths, vectorize
+from refine_art import EDIT_BOUNDS, ink_clip_path, ink_strokes, refine_artwork
 
 HERE = Path(__file__).resolve().parent
 V9 = HERE.parent / "face_v9_color_only"
@@ -234,16 +235,17 @@ def sheet_artifacts(destination, rows, source_data, indexed, ids, colors, number
     colored = ('<g id="paint-fills" fill-rule="evenodd" stroke-width=".14" stroke-linejoin="round">\n'
                + colored + "\n</g>")
 
+    clip = ink_clip_path(arcs, rings, segments, origin, unit, SAMPLES)
+    clip_definition = (f'<defs><clipPath id="art-ink-clip"><path clip-rule="evenodd" '
+                       f'd="{clip}"/></clipPath></defs>')
+
     def details(monochrome):
         art_scale = unit * SAMPLES
-        x = origin[0] + OFFSET[0] * art_scale
-        y = origin[1] + OFFSET[1] * art_scale
-        scale = SCALE * art_scale
-        pigment = "#46434A" if monochrome else "#18101B"
-        paths = "".join(f'<path d="{d}"/>' for d in DETAIL_PATHS)
-        return (f'<g id="open-details" transform="translate({x} {y}) scale({scale})" fill="none" '
-                f'stroke="{pigment}" stroke-width="{STROKE_MM / scale}" stroke-linecap="round">'
-                f'{paths}</g>')
+        paths = "".join(f'<path stroke="{("#46434A" if monochrome else pigment)}" d="{path}"/>'
+                        for path, pigment in ink_strokes())
+        return (clip_definition + '<g id="open-details" clip-path="url(#art-ink-clip)">'
+                f'<g transform="translate({origin[0]} {origin[1]}) scale({art_scale})" fill="none" '
+                f'stroke-width="{STROKE_MM / art_scale}" stroke-linecap="round">{paths}</g></g>')
 
     line_art = boundary + "\n" + details(True)
     (destination / "numbered-outline.svg").write_text(
@@ -338,9 +340,9 @@ def compile_fields(indexed, rows, unit, bounds, detail_spacing=False):
     raise ValueError("Could not repair all narrow vector fields")
 
 
-def retain_scene_numbers(numbered, prior, ids, colors, changed):
-    """Reuse existing label positions away from the facial edit."""
-    x0, y0, x1, y1 = PATCH
+def retain_scene_numbers(numbered, prior, ids, colors, changed, patch=PATCH):
+    """Reuse existing label positions away from the selected edit."""
+    x0, y0, x1, y1 = patch
     existing = {}
     for _, paint, x, y in prior:
         column, row = int(x), int(y)
@@ -356,6 +358,30 @@ def retain_scene_numbers(numbered, prior, ids, colors, changed):
             else (region, paint, x, y) for region, paint, x, y in numbered]
 
 
+def refine_print(destination, rows, source_data, baseline, baseline_numbers, unit, bounds):
+    artwork, anatomy = refine_artwork(baseline, rows, SAMPLES)
+    indexed, ids, colors, numbered, arcs, rings, edge_count = compile_fields(
+        artwork, rows, unit, bounds, detail_spacing=True
+    )
+    changed = indexed != baseline
+    x0, y0, x1, y1 = EDIT_BOUNDS
+    outside = changed.copy()
+    outside[y0*SAMPLES:y1*SAMPLES, x0*SAMPLES:x1*SAMPLES] = False
+    if outside.any():
+        raise ValueError("The drawing changed outside the portrait and kimono")
+    numbered = retain_scene_numbers(numbered, baseline_numbers, ids, colors, changed, EDIT_BOUNDS)
+    source_data.update({
+        "vector_topology_checked_mm": .19,
+        "approved_face_v10_commit": REFERENCE_SHA,
+        "art_refinement_bbox_native_px": list(EDIT_BOUNDS),
+        "paint_pixels_changed_inside_art": int(np.count_nonzero(changed)),
+        "paint_pixels_changed_outside_art": int(np.count_nonzero(outside)),
+        **anatomy,
+    })
+    sheet_artifacts(destination, rows, source_data, indexed, ids, colors, numbered,
+                    unit, bounds, arcs, rings, edge_count)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
@@ -368,24 +394,10 @@ def main():
     bounds, font_file = glyph_bounds()
 
     initial, _, _, prior, *_ = compile_fields(smooth_colors(master, len(rows)), rows, unit, bounds)
-    edited = transfer_face(initial, SAMPLES)
-    indexed, ids, colors, numbered, arcs, rings, edge_count = compile_fields(edited, rows, unit, bounds, detail_spacing=True)
-    x0, y0, x1, y1 = PATCH
-    changed = indexed != initial
-    outside = changed.copy()
-    outside[y0*SAMPLES:y1*SAMPLES, x0*SAMPLES:x1*SAMPLES] = False
-    if outside.any():
-        raise ValueError("The face transfer changed the indexed scene outside its edit area")
-    numbered = retain_scene_numbers(numbered, prior, ids, colors, changed)
-    source_data.update({
-        "vector_topology_checked_mm": .19,
-        "approved_face_v10_commit": REFERENCE_SHA,
-        "face_transfer_bbox_native_px": list(PATCH),
-        "paint_pixels_changed_inside_face": int(np.count_nonzero(changed)),
-        "paint_pixels_changed_outside_face": int(np.count_nonzero(outside)),
-    })
-    sheet_artifacts(destination, rows, source_data, indexed, ids, colors, numbered,
-                    unit, bounds, arcs, rings, edge_count)
+    face = transfer_face(initial, SAMPLES)
+    baseline, base_ids, base_colors, before, *_ = compile_fields(face, rows, unit, bounds, detail_spacing=True)
+    baseline_numbers = retain_scene_numbers(before, prior, base_ids, base_colors, baseline != initial)
+    refine_print(destination, rows, source_data, baseline, baseline_numbers, unit, bounds)
     export_palette(destination, rows, font_file)
     export_pdf(destination)
 

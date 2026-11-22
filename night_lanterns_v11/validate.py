@@ -15,7 +15,7 @@ import fitz
 import numpy as np
 from PIL import Image
 
-from face_transfer import OFFSET, SCALE
+from refine_art import ART, selected_layer
 
 SVG = {"s": "http://www.w3.org/2000/svg"}
 POINTS_PER_MM = 72 / 25.4
@@ -52,13 +52,19 @@ def check_geometry(folder, data, palette):
         check(region_ids[y, x] == segment["segment_id"], "A number is in the wrong field")
         check(labels[y, x] == segment["paint_id"], "A number points to the wrong paint")
     samples = labels.shape[1] / 1122
-    face_paints = ((524, 812, 19), (742, 752, 19), (747, 844, 17),
-                   (725, 808, 16), (501, 869, 16), (723, 1072, 16))
-    for x, y, paint in face_paints:
-        row = round((OFFSET[1] + SCALE * y) * samples)
-        col = round((OFFSET[0] + SCALE * x) * samples)
-        check(labels[row, col] == paint, f"The approved V10 face paint moved at {x}, {y}")
-    check(data["paint_pixels_changed_outside_face"] == 0, "The poster changed beyond the face")
+    far_eye = ((632, 364, 4), (631, 387, 16), (638, 370, 19))
+    checks = ((599, 441, 15), (473, 402, 15), (575, 403, 16)) + far_eye
+    for x, y, paint in checks:
+        check(labels[round(y * samples), round(x * samples)] == paint,
+              f"Unexpected paint at {x}, {y}")
+    profile = selected_layer(ET.parse(ART).getroot(), "far-profile", labels.shape)[..., 3] >= 128
+    eye_fields = [region_ids[round(y * samples), round(x * samples)] for x, y, _ in far_eye]
+    check(len(set(eye_fields)) == len(far_eye), "The far-eye paint planes merged")
+    check(not np.any(np.isin(region_ids, eye_fields) & ~profile),
+          "A printed far-eye field exceeds the facial profile")
+    check(data["far_eye_outside_profile_pixels"] == 0, "The drawn far eye exceeds the facial profile")
+    check(data["far_eye_artist_profile_clearance_px"] > 2, "The far eye touches the facial profile")
+    check(data["paint_pixels_changed_outside_art"] == 0, "The scene changed beyond the art edit")
 
 
 def check_printed_boundaries(folder, data):
@@ -166,9 +172,12 @@ def validate(folder):
         "printed_proof_dpi": 304.8,
         "all_color_pdf_samples_match": True,
         "approved_face_v10_commit": data["approved_face_v10_commit"],
-        "face_transfer_bbox_native_px": data["face_transfer_bbox_native_px"],
-        "paint_pixels_changed_outside_face": data["paint_pixels_changed_outside_face"],
-        "under_far_eye_paint": 17,
+        "art_refinement_bbox_native_px": data["art_refinement_bbox_native_px"],
+        "paint_pixels_changed_outside_art": data["paint_pixels_changed_outside_art"],
+        "far_eye_outside_profile_pixels": data["far_eye_outside_profile_pixels"],
+        "printed_far_eye_fields_inside_profile": True,
+        "far_eye_artist_profile_clearance_px": data["far_eye_artist_profile_clearance_px"],
+        "base_skin_paint": data["base_skin_paint"],
         "v9_indexed_sha256": data["v9_indexed_sha256"],
         "v9_preview_sha256": data["v9_preview_sha256"],
     }
