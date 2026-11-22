@@ -29,13 +29,17 @@ jobs:
           mkdir -p face_reference_v10/output
           git show origin/art-v10-numbering-user-approved-lineart:face_reference_v10/output/color_assignment_review.png > face_reference_v10/output/color_assignment_review.png
           git show origin/art-v10-numbering-user-approved-lineart:face_reference_v10/output/audit.json > face_reference_v10/output/audit.json
-      - name: Composite V9 and V10 source without AI generation
-        run: python experiments/full_v9_with_approved_v10_face.py
-      - name: Build fully numbered V11 paint-by-numbers proofs
-        if: success()
+      - name: Generate image and keep an explicit diagnostic if anything fails
         run: |
-          if [ -f experiments/full_v11_numbers.py ]; then
-            python experiments/full_v11_numbers.py
+          mkdir -p full_v11_v9_with_v10_face
+          set +e
+          python experiments/full_v9_with_approved_v10_face.py > full_v11_v9_with_v10_face/composite_build.log 2>&1
+          echo $? > full_v11_v9_with_v10_face/composite_exit_code.txt
+          if [ "$(cat full_v11_v9_with_v10_face/composite_exit_code.txt)" = "0" ]; then
+            python experiments/full_v11_numbers.py > full_v11_v9_with_v10_face/numbering_build.log 2>&1
+            echo $? > full_v11_v9_with_v10_face/numbering_exit_code.txt
+          else
+            echo "NOT_RUN_COMPOSITE_FAILED" > full_v11_v9_with_v10_face/numbering_exit_code.txt
           fi
       - name: Save proof artifacts
         if: always()
@@ -44,8 +48,8 @@ jobs:
           name: full-v11-v9-with-approved-v10-face
           path: full_v11_v9_with_v10_face/
           retention-days: 30
-      - name: Publish proofs to V11 branch
-        if: success()
+      - name: Publish proofs and build diagnostics to V11 branch
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
