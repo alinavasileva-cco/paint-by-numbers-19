@@ -1,5 +1,6 @@
 {
   "reference_sha256": "a190de43574a70f35f52ddea1cb831e15a969b08a397238ddb7ad71943b90354",
+  "original_antialiased_sha256": "f52728559cc7505ea1649de0e218e4f077ee36827bded3d09ca3f34a7aaf5cad",
   "original_input_unchanged": true,
   "derived_stroke_pixels_changed": 48,
   "corrections": [
