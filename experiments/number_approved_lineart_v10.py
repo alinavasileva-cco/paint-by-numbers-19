@@ -94,6 +94,13 @@ def run():
         ImageDraw.Draw(glyph).text((2-bb[0],2-bb[1]),label,font=font,fill=255)
         kernel=cv2.dilate((np.asarray(glyph)>20).astype(np.uint8),np.ones((3,3),np.uint8))
         fit=cv2.erode(cell,kernel,borderType=cv2.BORDER_CONSTANT,borderValue=0)
+        # The glyph must fit not just inside this connected cell, but also
+        # fully inside the printed canvas. Cropped edge labels are forbidden.
+        kh,kw=kernel.shape
+        glob_x=x+np.arange(bw)[None,:]
+        glob_y=y+np.arange(bh)[:,None]
+        fit[(glob_x<kw//2)|(glob_x>=W-(kw-kw//2))|
+            (glob_y<kh//2)|(glob_y>=H-(kh-kh//2))]=0
         if not np.any(fit):
             failures.append(rid);continue
         clearance=cv2.distanceTransform(cell,cv2.DIST_L2,5)
