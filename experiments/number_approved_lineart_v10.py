@@ -79,7 +79,7 @@ def run():
     # the right-side eye belongs to the skin (17), not highlight (19).
     # Resolve it by a stable pixel in the approved 1122x1402 reference:
     # this changes exactly ONE connected region; the other 19s stay as-is.
-    cheek_x,cheek_y=680,810
+    cheek_x,cheek_y=755,850
     cheek_region=int(region[cheek_y,cheek_x])
     numbers=NUMBERS.copy()
     if cheek_region<=0 or numbers[cheek_region-1]!=19:
