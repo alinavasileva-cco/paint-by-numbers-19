@@ -1,0 +1,35 @@
+name: V8 natural face drawing only
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/build_face_v8.py
+      - .github/workflows/build-face-v8.yml
+jobs:
+  face:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Render corrected narrow anime eyes and locally merge only non-fitting facial paint
+        run: python experiments/build_face_v8.py
+      - name: Keep all diagnostics even when artistic candidate is incomplete
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: face-v8-candidate
+          path: face_v8/
+      - name: Publish result only in V8 review branch
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v8
+          git commit -m 'Artistically refine face with natural eyes and no changes outside face' || exit 0
+          git pull --rebase origin art-v8-face-natural
+          git push origin HEAD:art-v8-face-natural
