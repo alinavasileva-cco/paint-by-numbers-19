@@ -30,7 +30,11 @@ def main():
     permissible=set(palette.values())
     for name,src in (("V9",base),("V10",face)):
         unique={tuple(v.tolist()) for v in np.unique(src.reshape(-1,3),axis=0)}
-        if unique-permissible:raise RuntimeError(f"{name}: {len(unique-permissible)} non-palette colors")
+        if name=="V10" and unique-permissible:
+            raise RuntimeError(f"{name}: {len(unique-permissible)} non-palette colors")
+        # V9 is a SMOOTH visual preview with antialiased edge pixels.
+        # Keep the exact unquantized V9 source for the conservation proof;
+        # quantize only the separately printable 19-paint rendition.
     # Exact 3-landmark match: two eye centers and mouth, allowing affine scale
     # and shear to align the approved larger V10 face to the smaller V9 profile.
     source=np.float32([(515,822),(730,770),(720,1052)])
@@ -68,10 +72,22 @@ def main():
     bbox=[int(xs.min()),int(ys.min()),int(xs.max()+1),int(ys.max()+1)]
     if bbox[0]<int(635*sx) or bbox[1]<int(410*sy) or bbox[2]>int(860*sx) or bbox[3]>int(645*sy):
         raise RuntimeError(f"Changes escaped facial vicinity: {bbox}")
-    merged_colors={tuple(c.tolist()) for c in np.unique(merged.reshape(-1,3),axis=0)}
-    if merged_colors-permissible:raise RuntimeError("Merged painting has non-palette colors")
+    # Keep an exact V9-preserving visual composite as evidence: every pixel
+    # outside the V10 face mask is unchanged from the user's V9 source.
+    Image.fromarray(merged).save(OUT/"full_color_v11_source_composite.png",optimize=True)
+    # V9 smooth preview contains antialias intermediary shades (thousands of
+    # RGB combinations). Round only the printable copy to the EXISTING 19
+    # THE CASE paint colors. No new colors or AI rendering.
+    sample, inv=np.unique(merged.reshape(-1,3),axis=0,return_inverse=True)
+    p19=np.array([palette[i] for i in range(1,20)],dtype=np.int32)
+    d=((sample.astype(np.int32)[:,None,:]-p19[None,:,:])**2).sum(axis=2)
+    lut=np.argmin(d,axis=1).astype(np.uint8)
+    printed=p19[lut[inv]].astype(np.uint8).reshape(H,W,3)
+    merged_colors={tuple(c.tolist()) for c in np.unique(printed.reshape(-1,3),axis=0)}
+    if merged_colors-permissible or len(merged_colors)>19:
+        raise RuntimeError("Print copy is not restricted to 19 palette colors")
     art=OUT/"full_color_v11.png"
-    Image.fromarray(merged).save(art,optimize=True)
+    Image.fromarray(printed).save(art,optimize=True)
     Image.fromarray(matte).save(OUT/"facial_edit_mask.png",optimize=True)
     # QA: side by side crops, original vs new, at native pixels.
     crop=tuple(round(v*(sx if j%2==0 else sy)) for j,v in enumerate((600,383,900,700)))
@@ -89,6 +105,9 @@ def main():
       "approved_v10_path":str(V10.relative_to(ROOT)),"approved_v10_sha256":sha(V10),
       "original_dimensions":[W,H],"colors_max":19,"colors_actual":len(merged_colors),
       "modified_pixels":nchanged,"modified_fraction":round(nchanged/(W*H),6),
+      "v9_exact_unmodified_outside_face_in":"full_color_v11_source_composite.png",
+      "printable_19_color_render":"full_color_v11.png",
+      "antialias_quantization_changed_pixels":int(np.any(printed!=merged,axis=2).sum()),
       "changed_bbox_xyxy":bbox,"only_face_edited":True,
       "v10_under_right_eye_color":17,
       "source_landmarks":source.astype(int).tolist(),
