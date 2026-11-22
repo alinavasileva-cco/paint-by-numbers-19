@@ -1,0 +1,77 @@
+name: Build approved lanterns paint-by-numbers
+
+on:
+  push:
+    branches:
+      - art-lanterns-hachette-19-v1
+    paths:
+      - ".github/workflows/build-lanterns-v1.yml"
+      - "scripts/build_lanterns_v1.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: art-lanterns-hachette-19-v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download exact approved source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lanterns_hachette_19_v1
+          curl -L --fail --retry 3 \
+            "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/e61f11eadbd2934312705e96d96099aea83a914e84459b6c112702b0a6a8caaf.png" \
+            -o lanterns_hachette_19_v1/source_exact_approved.png
+          echo "af8f41ccffe0fa9232205e8ea0df0b0e88aa48176ddfbca6332b2d06857d5036  lanterns_hachette_19_v1/source_exact_approved.png" | sha256sum -c -
+
+      - name: Build 19-colour numbered field map
+        run: python scripts/build_lanterns_v1.py
+
+      - name: Verify hard requirements
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("lanterns_hachette_19_v1/audit.json")
+          a = json.loads(p.read_text(encoding="utf-8"))
+          assert a["source_exact_approved_sha256"] == "af8f41ccffe0fa9232205e8ea0df0b0e88aa48176ddfbca6332b2d06857d5036"
+          assert a["paint_colors"] == 19
+          assert a["white_counted_as_paint"] is False
+          assert a["line_width_mm"] == 0.2
+          assert a["font_size_pt"] == 5.3
+          assert a["regions_total"] == a["regions_numbered"]
+          assert a["regions_without_number"] == 0
+          assert a["all_regions_fit_5_3pt"] is True
+          print(json.dumps(a, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit verified outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lanterns_hachette_19_v1
+          if git diff --cached --quiet; then
+            echo "No output changes."
+          else
+            git commit -m "Build approved lanterns 19-colour numbered artwork"
+            git push origin HEAD:art-lanterns-hachette-19-v1
+          fi
