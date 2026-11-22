@@ -177,8 +177,10 @@ def local_fit_merge(work,palette,numbers,scale,masks,max_rounds=35):
     face_zone=masks["changed_zone"]
     # Artistic transition between newly redrawn skin and existing hair:
     # max 4 source pixels outward; no distant objects can be altered.
-    editable_border=cv2.dilate(face_zone.astype(np.uint8),
-                               np.ones((9,9),np.uint8))>0
+    # Facial working boundary includes the small sideburn bridge between
+    # the ear and chin. Touch no sky, lantern, kimono or open water here.
+    editable_border=np.zeros_like(face_zone)
+    editable_border[342:528,437:677]=True
     lab=cv2.cvtColor(palette[None,:,:].astype(np.uint8),cv2.COLOR_RGB2LAB)[0].astype(np.float32)
     for k in range(max_rounds):
         ids,rc,_=base.label_components(work,19)
@@ -285,8 +287,8 @@ def build(out):
     # No change to original picture outside mask of hand-redrawn face/ear.
     changed=revised!=current
     # Permit a four-pixel hair-to-skin boundary clean-up and record it.
-    editable=cv2.dilate(masks["changed_zone"].astype(np.uint8),
-                        np.ones((9,9),np.uint8))>0
+    editable=np.zeros_like(masks["changed_zone"])
+    editable[342:528,437:677]=True
     outside=changed & ~editable
     # A segmentation edge must never become a global arbitrary repaint.
     if np.any(outside):raise RuntimeError(f"{outside.sum()} changes outside face")
@@ -361,6 +363,7 @@ def build(out):
       "palette_limit":19,
       "face_changed_pixels":int(changed.sum()),
       "outside_face_changed_pixels":int(outside.sum()),
+      "face_transition_zone":"x437..677 y342..528",
       "eyes":eye_stats,
       "local_facial_micro_merges":merge_history,
       "original_png_sha256":hashlib.sha256(sourcebytes).hexdigest(),
