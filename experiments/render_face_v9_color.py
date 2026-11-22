@@ -191,7 +191,7 @@ def compose():
     path_stroke(out,((646,408),(650,418),(657,424),(652,430)),n(INK),1)
 
     # Fine controlled hair/fringe strands in the approved dark hair tone.
-    hair_color=original[360,501]
+    hair_color=n(INK) # Existing near-black ink: face still uses <=7 pigments
     for p in [
       ((533,360),(541,375),(548,378),(550,389)),
       ((567,350),(574,371),(581,378),(587,388)),
