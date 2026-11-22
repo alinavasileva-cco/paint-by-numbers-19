@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "black_white_pdf": "V10_lineart_numbered_19_colors.pdf",
+  "colored_pdf": "V10_colored_and_palette_19_colors.pdf",
+  "black_white_pages": 1,
+  "colored_pages": 2,
+  "artwork_size_px": [
+    1122,
+    1402
+  ],
+  "artwork_width_mm": 400,
+  "palette_colors": 19,
+  "skin_region_corrected": 66
+}
