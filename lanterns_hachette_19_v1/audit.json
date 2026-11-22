@@ -1,0 +1,49 @@
+{
+  "source_exact_approved_sha256": "af8f41ccffe0fa9232205e8ea0df0b0e88aa48176ddfbca6332b2d06857d5036",
+  "source_exact_preserved": true,
+  "source_dimensions_px": [
+    1084,
+    1451
+  ],
+  "artwork_crop_px": [
+    15,
+    11,
+    1070,
+    1334
+  ],
+  "artwork_dimensions_px": [
+    1055,
+    1323
+  ],
+  "paint_colors": 19,
+  "white_counted_as_paint": false,
+  "palette_source": "19 swatches embedded in approved image",
+  "palette_order": "approved source order: dark/cool -> warm/light",
+  "line_width_mm": 0.2,
+  "font_size_pt": 5.3,
+  "regions_total": 952,
+  "regions_numbered": 952,
+  "regions_without_number": 0,
+  "all_regions_fit_5_3pt": true,
+  "quantization_distance_dtype": "int32",
+  "outline_paths": 2773,
+  "simplification": {
+    "majority_filter": 5,
+    "small_region_merge_px": 80,
+    "label_fit_min_area_px": 50,
+    "history": [
+      {
+        "regions": 1344,
+        "unfit": 344
+      },
+      {
+        "regions": 957,
+        "unfit": 5
+      },
+      {
+        "regions": 952,
+        "unfit": 0
+      }
+    ]
+  }
+}
