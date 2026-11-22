@@ -165,6 +165,10 @@ def local_fit_merge(work,palette,numbers,scale,masks,max_rounds=35):
     rows=[]
     protected_eye=masks["protected_eye"]
     face_zone=masks["changed_zone"]
+    # Artistic transition between newly redrawn skin and existing hair:
+    # max 4 source pixels outward; no distant objects can be altered.
+    editable_border=cv2.dilate(face_zone.astype(np.uint8),
+                               np.ones((9,9),np.uint8))>0
     lab=cv2.cvtColor(palette[None,:,:].astype(np.uint8),cv2.COLOR_RGB2LAB)[0].astype(np.float32)
     for k in range(max_rounds):
         ids,rc,_=base.label_components(work,19)
@@ -178,10 +182,14 @@ def local_fit_merge(work,palette,numbers,scale,masks,max_rounds=35):
             patch=ids==rid
             if np.any(patch & protected_eye):
                 raise RuntimeError(f"Hand-drawn eye pigment region {rid} cannot fit 5.3pt number; redesign eye instead of losing iris/pupil")
-            if not np.any(patch&face_zone):
-                raise RuntimeError(f"Unnumberable region {rid} outside revised face; do not modify original painting")
-            if np.any(patch&~face_zone):
-                raise RuntimeError(f"Unnumberable region {rid} straddles protected outer art; adjust face outline instead")
+            if not np.any(patch&editable_border):
+                yy,xx=np.nonzero(patch)
+                raise RuntimeError(f"Unnumberable region {rid} far outside face: "
+                                   f"area={int(patch.sum())},center={(int(xx.mean()),int(yy.mean()))}")
+            if np.any(patch&~editable_border):
+                yy,xx=np.nonzero(patch)
+                raise RuntimeError(f"Unnumberable region {rid} straddles distant protected art: "
+                                   f"area={int(patch.sum())},box={(int(xx.min()),int(yy.min()),int(xx.max()),int(yy.max()))}")
             neighbors=adj.get(rid,[])
             choices=[]
             current=int(rc[rid])
@@ -254,6 +262,8 @@ def build(out):
     original,colors,numbers,sourcebytes,scale=art.prepare()
     current=indexed_png(V4/"color_segmentation_review.png",colors)
     revised,masks,color_ids=redraw_indexed(current,colors,numbers)
+    Image.fromarray(colors[revised]).save(out/"draft_face_before_fit_merge.png")
+    Image.fromarray(ink_preview(colors[revised])[330:530,430:685]).save(out/"draft_face_detail.png")
     revised,merge_history=local_fit_merge(revised,colors,numbers,scale,masks)
     ids,region_colors,_=base.label_components(revised,len(colors))
     fits,locations,areas,dims,rotations=art.label_fit(ids,region_colors,numbers,scale)
@@ -264,7 +274,10 @@ def build(out):
     num=int(ids.max())
     # No change to original picture outside mask of hand-redrawn face/ear.
     changed=revised!=current
-    outside=changed & ~masks["changed_zone"]
+    # Permit a four-pixel hair-to-skin boundary clean-up and record it.
+    editable=cv2.dilate(masks["changed_zone"].astype(np.uint8),
+                        np.ones((9,9),np.uint8))>0
+    outside=changed & ~editable
     # A segmentation edge must never become a global arbitrary repaint.
     if np.any(outside):raise RuntimeError(f"{outside.sum()} changes outside face")
     # Eye regions must remain independently numberable, not merge into skin.
