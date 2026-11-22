@@ -1,0 +1,9 @@
+CairoSVG>=2.7,<3
+fonttools>=4.50,<5
+numpy>=2,<3
+opencv-python-headless>=4.10,<6
+Pillow>=11,<14
+PyMuPDF>=1.25,<2
+reportlab>=4.2,<5
+scipy>=1.13,<2
+shapely>=2.1,<3
