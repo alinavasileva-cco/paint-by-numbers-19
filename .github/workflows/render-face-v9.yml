@@ -1,0 +1,36 @@
+name: V9 — redraw face art only, before numbering
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/render_face_v9_color.py'
+      - '.github/workflows/render-face-v9.yml'
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Create clean anime portrait using at most seven existing facial pigments
+        run: python experiments/render_face_v9_color.py
+      - name: Keep rendered face and QA even if validation fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: face-v9-color-art-proof
+          path: face_v9_color_only/
+          retention-days: 14
+      - name: Publish color-art proof in separate branch, no numbering yet
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v9_color_only
+          git commit -m 'Publish clean seven-color face art for review, without touching scene' || exit 0
+          git pull --rebase origin art-face-v9-redraw-color-only
+          git push origin HEAD:art-face-v9-redraw-color-only
