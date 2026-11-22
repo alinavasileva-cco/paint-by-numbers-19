@@ -1,0 +1,34 @@
+name: Diagnose unnumberable pixels in previous face
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/face_v7_diagnostic.py
+      - .github/workflows/face-v7-diagnostic.yml
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python experiments/face_v7_diagnostic.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: face-v7-diagnostic
+          path: face_v7_diagnostic/
+          retention-days: 14
+      - name: Record face-specific fit blockers
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v7_diagnostic
+          git commit -m 'Map unnumberable paint areas before local art edits' || exit 0
+          git pull --rebase origin art-v7-face-local-cleanup
+          git push origin HEAD:art-v7-face-local-cleanup
