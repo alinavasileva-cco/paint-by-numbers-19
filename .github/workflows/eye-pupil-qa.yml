@@ -1,0 +1,36 @@
+name: V7 Eye pupil art and print QA
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/add_face_pupil_art.py
+      - .github/workflows/eye-pupil-qa.yml
+jobs:
+  pupils:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python experiments/add_face_pupil_art.py
+      - name: Upload revised face preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: eyes-with-colored-iris-and-printed-pupil
+          path: |
+            face_v7/color_artist_with_ink.png
+            face_v7/lineart_with_pupils.svg
+            face_v7/lineart_with_pupils.png
+            face_v7/lineart_with_pupils_screen.png
+      - name: Publish alternate eye treatment on experimental branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v7/color_artist_with_ink.png face_v7/lineart_with_pupils*
+          git commit -m 'Draw source-aligned black pupil detail without new paint cells' || exit 0
+          git pull --rebase origin art-v7-face-local-cleanup
+          git push origin HEAD:art-v7-face-local-cleanup
