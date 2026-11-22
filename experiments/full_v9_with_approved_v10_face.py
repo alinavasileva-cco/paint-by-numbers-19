@@ -64,6 +64,22 @@ def main():
     matte=cv2.bitwise_and(matte,restrict)
     merged=base.copy()
     merged[matte>0]=warped[matte>0]
+    # QA fix: the first proof had a visible horizontal rectangle-shaped
+    # color transition across the forehead. Extend the approved V10 skin
+    # through contiguous V9 facial SKIN, stopping naturally at original hair
+    # boundaries. This affects the face only, never scenery or clothing.
+    v9_skin=base[round(540*sy),round(760*sx)].astype(np.int16)
+    old_skin_distance=np.abs(base.astype(np.int16)-v9_skin[None,None,:]).sum(axis=2)
+    old_skin=(old_skin_distance<=24).astype(np.uint8)
+    forehead_region=np.zeros((H,W),np.uint8)
+    forehead_poly=np.array([(653,424),(738,412),(807,429),(844,461),
+                            (849,521),(832,574),(793,626),(718,632),
+                            (659,572)],np.float32)
+    forehead_poly=np.rint(forehead_poly*np.array([sx,sy])).astype(np.int32)
+    cv2.fillPoly(forehead_region,[forehead_poly],255)
+    extension=(forehead_region>0)&(old_skin>0)&(matte==0)
+    merged[extension]=palette[17]
+    matte[extension]=255
     changed=np.any(merged!=base,axis=2)
     nchanged=int(changed.sum())
     if not 3000 <= nchanged <= 200000:
@@ -105,6 +121,7 @@ def main():
       "approved_v10_path":str(V10.relative_to(ROOT)),"approved_v10_sha256":sha(V10),
       "original_dimensions":[W,H],"colors_max":19,"colors_actual":len(merged_colors),
       "modified_pixels":nchanged,"modified_fraction":round(nchanged/(W*H),6),
+      "skin_edge_extension_pixels":int(extension.sum()),
       "v9_exact_unmodified_outside_face_in":"full_color_v11_source_composite.png",
       "printable_19_color_render":"full_color_v11.png",
       "antialias_quantization_changed_pixels":int(np.any(printed!=merged,axis=2).sum()),
