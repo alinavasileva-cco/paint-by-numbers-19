@@ -1,0 +1,37 @@
+name: V9 smooth vector face color preview
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'experiments/vector_face_v9.py'
+      - '.github/workflows/vector-face-v9.yml'
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Rebuild native seven-color face art
+        run: python experiments/render_face_v9_color.py
+      - name: Render smooth vector face on unchanged full composition
+        run: python experiments/vector_face_v9.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: face-v9-smooth-artwork-for-approval
+          path: face_v9_color_only/
+          retention-days: 14
+      - name: Publish color visual, not numbered sheet
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v9_color_only
+          git commit -m 'Publish smooth hand-drawn vector face art with seven original colors' || exit 0
+          git pull --rebase origin art-face-v9-redraw-color-only
+          git push origin HEAD:art-face-v9-redraw-color-only
