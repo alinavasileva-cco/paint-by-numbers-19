@@ -6,29 +6,15 @@
     677,
     515
   ],
-  "changed_pixels_inside_edit_area": 3210,
+  "changed_pixels_inside_edit_area": 3418,
   "changed_pixels_outside_edit_area": 0,
   "regions_total": 949,
-  "regions_numbered": 948,
-  "regions_without_number": 1,
-  "label_fit_failed_regions": 1,
-  "unfit_ids": [
-    480
-  ],
-  "unfit_details": [
-    {
-      "id": 480,
-      "color_number": 11,
-      "area_px": 65,
-      "bbox": [
-        636,
-        384,
-        646,
-        398
-      ]
-    }
-  ],
-  "all_regions_numbered": false,
+  "regions_numbered": 949,
+  "regions_without_number": 0,
+  "label_fit_failed_regions": 0,
+  "unfit_ids": [],
+  "unfit_details": [],
+  "all_regions_numbered": true,
   "disconnected_region_ids": [],
   "pixels_without_color_assignment": 0,
   "font_size_pt": 5.3,
@@ -39,37 +25,27 @@
   "merge_passes": [
     {
       "pass": 1,
-      "before": 1079,
-      "unfit_before": 132,
-      "merged": 126,
+      "before": 1074,
+      "unfit_before": 126,
+      "merged": 122,
       "violations": [
         {
-          "id": 454,
-          "cause": "no_compatible_neighbor",
-          "area": 19
-        },
-        {
-          "id": 598,
+          "id": 593,
           "cause": "no_compatible_neighbor",
           "area": 45
         },
         {
-          "id": 536,
-          "cause": "protect_important_eye_color_shape",
-          "area": 64
-        },
-        {
-          "id": 757,
+          "id": 752,
           "cause": "no_compatible_neighbor",
           "area": 70
         },
         {
-          "id": 759,
+          "id": 754,
           "cause": "no_compatible_neighbor",
           "area": 73
         },
         {
-          "id": 761,
+          "id": 756,
           "cause": "no_compatible_neighbor",
           "area": 105
         }
@@ -77,17 +53,12 @@
     },
     {
       "pass": 2,
-      "before": 990,
-      "unfit_before": 42,
-      "merged": 40,
+      "before": 989,
+      "unfit_before": 40,
+      "merged": 39,
       "violations": [
         {
-          "id": 499,
-          "cause": "protect_important_eye_color_shape",
-          "area": 65
-        },
-        {
-          "id": 689,
+          "id": 688,
           "cause": "no_compatible_neighbor",
           "area": 120
         }
@@ -96,30 +67,11 @@
     {
       "pass": 3,
       "before": 954,
-      "unfit_before": 6,
+      "unfit_before": 5,
       "merged": 5,
-      "violations": [
-        {
-          "id": 482,
-          "cause": "protect_important_eye_color_shape",
-          "area": 65
-        }
-      ]
-    },
-    {
-      "pass": 4,
-      "before": 949,
-      "unfit_before": 1,
-      "merged": 0,
-      "violations": [
-        {
-          "id": 480,
-          "cause": "protect_important_eye_color_shape",
-          "area": 65
-        }
-      ]
+      "violations": []
     }
   ],
   "visual_approval": "PENDING",
-  "status": "NEEDS_ART_REVIEW"
+  "status": "PASS_NUMBERING"
 }
