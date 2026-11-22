@@ -1,0 +1,156 @@
+{
+  "base": "face_v6/exact_previous_face/color_segmentation_review.png",
+  "edit_area_source_px": [
+    454,
+    309,
+    677,
+    515
+  ],
+  "changed_pixels_inside_edit_area": 3980,
+  "changed_pixels_outside_edit_area": 0,
+  "regions_total": 963,
+  "regions_numbered": 948,
+  "regions_without_number": 15,
+  "label_fit_failed_regions": 15,
+  "unfit_ids": [
+    480,
+    481,
+    482,
+    483,
+    533,
+    581,
+    582,
+    584,
+    586,
+    664,
+    736,
+    817,
+    818,
+    821,
+    912
+  ],
+  "all_regions_numbered": false,
+  "disconnected_region_ids": [],
+  "pixels_without_color_assignment": 0,
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "colors_in_derived_image": 19,
+  "source_png_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "original_png_unchanged": true,
+  "merge_passes": [
+    {
+      "pass": 1,
+      "before": 1070,
+      "unfit_before": 121,
+      "merged": 121,
+      "violations": []
+    },
+    {
+      "pass": 2,
+      "before": 1006,
+      "unfit_before": 58,
+      "merged": 58,
+      "violations": []
+    },
+    {
+      "pass": 3,
+      "before": 985,
+      "unfit_before": 37,
+      "merged": 37,
+      "violations": []
+    },
+    {
+      "pass": 4,
+      "before": 979,
+      "unfit_before": 31,
+      "merged": 31,
+      "violations": []
+    },
+    {
+      "pass": 5,
+      "before": 975,
+      "unfit_before": 27,
+      "merged": 27,
+      "violations": []
+    },
+    {
+      "pass": 6,
+      "before": 970,
+      "unfit_before": 22,
+      "merged": 22,
+      "violations": []
+    },
+    {
+      "pass": 7,
+      "before": 966,
+      "unfit_before": 18,
+      "merged": 18,
+      "violations": []
+    },
+    {
+      "pass": 8,
+      "before": 964,
+      "unfit_before": 16,
+      "merged": 16,
+      "violations": []
+    },
+    {
+      "pass": 9,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 10,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 11,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 12,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 13,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 14,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 15,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    },
+    {
+      "pass": 16,
+      "before": 963,
+      "unfit_before": 15,
+      "merged": 15,
+      "violations": []
+    }
+  ],
+  "visual_approval": "PENDING",
+  "status": "NEEDS_ART_REVIEW"
+}
