@@ -1,0 +1,151 @@
+{
+  "target_regions": "artistic_quality",
+  "regions_total": 944,
+  "regions_numbered": 944,
+  "regions_without_number": 0,
+  "all_regions_numbered": true,
+  "label_fit_failed_regions": 0,
+  "pixels_without_color_assignment": 0,
+  "disconnected_region_ids": [],
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "colors_in_derived_image": 19,
+  "palette_limit": 19,
+  "face_changed_pixels": 6694,
+  "outside_face_changed_pixels": 0,
+  "face_transition_zone": "x437..677 y342..528",
+  "eyes": {
+    "near_eye": {
+      "paint_numbers": [
+        4,
+        14,
+        15,
+        19
+      ],
+      "regions": 4,
+      "all_regions_fit": true
+    },
+    "far_eye": {
+      "paint_numbers": [
+        4,
+        7,
+        14,
+        17,
+        19
+      ],
+      "regions": 5,
+      "all_regions_fit": true
+    }
+  },
+  "local_facial_micro_merges": [
+    {
+      "region_id": 314,
+      "target": 657,
+      "area": 1,
+      "pass": 1,
+      "unfit_before": 15
+    },
+    {
+      "region_id": 529,
+      "target": 656,
+      "area": 1,
+      "pass": 2,
+      "unfit_before": 14
+    },
+    {
+      "region_id": 579,
+      "target": 655,
+      "area": 1,
+      "pass": 3,
+      "unfit_before": 13
+    },
+    {
+      "region_id": 626,
+      "target": 8,
+      "area": 1,
+      "pass": 4,
+      "unfit_before": 12
+    },
+    {
+      "region_id": 939,
+      "target": 414,
+      "area": 1,
+      "pass": 5,
+      "unfit_before": 11
+    },
+    {
+      "region_id": 939,
+      "target": 653,
+      "area": 1,
+      "pass": 6,
+      "unfit_before": 10
+    },
+    {
+      "region_id": 939,
+      "target": 624,
+      "area": 2,
+      "pass": 7,
+      "unfit_before": 9
+    },
+    {
+      "region_id": 315,
+      "target": 128,
+      "area": 5,
+      "pass": 8,
+      "unfit_before": 8
+    },
+    {
+      "region_id": 804,
+      "target": 936,
+      "area": 5,
+      "pass": 9,
+      "unfit_before": 7
+    },
+    {
+      "region_id": 315,
+      "target": 4,
+      "area": 8,
+      "pass": 10,
+      "unfit_before": 6
+    },
+    {
+      "region_id": 315,
+      "target": 4,
+      "area": 13,
+      "pass": 11,
+      "unfit_before": 5
+    },
+    {
+      "region_id": 933,
+      "target": 791,
+      "area": 45,
+      "pass": 12,
+      "unfit_before": 4
+    },
+    {
+      "region_id": 573,
+      "target": 130,
+      "area": 58,
+      "pass": 13,
+      "unfit_before": 3
+    },
+    {
+      "region_id": 526,
+      "target": 649,
+      "area": 61,
+      "pass": 14,
+      "unfit_before": 2
+    },
+    {
+      "region_id": 931,
+      "target": 648,
+      "area": 67,
+      "pass": 15,
+      "unfit_before": 1
+    }
+  ],
+  "original_png_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "source_png_unchanged": true,
+  "visual_approval": "PENDING",
+  "status": "PASS"
+}
