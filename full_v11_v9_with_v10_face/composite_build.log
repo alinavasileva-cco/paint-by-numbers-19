@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/home/runner/work/paint-by-numbers-19/paint-by-numbers-19/experiments/full_v9_with_approved_v10_face.py", line 99, in <module>
+    if __name__=="__main__":main()
+                            ^^^^^^
+  File "/home/runner/work/paint-by-numbers-19/paint-by-numbers-19/experiments/full_v9_with_approved_v10_face.py", line 26, in main
+    raise RuntimeError(f"Unexpected dimensions: V9={W,H} V10={face.shape[:2]}")
+RuntimeError: Unexpected dimensions: V9=(2244, 2804) V10=(1402, 1122)
