@@ -1,0 +1,35 @@
+name: V7 Face-only artistic simplification and numbered sheet
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - experiments/build_face_v7.py
+      - .github/workflows/build-face-v7.yml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - name: Simplify only the existing face and recheck all numbered cells
+        run: python experiments/build_face_v7.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artistic-face-local-v7
+          path: face_v7/
+          retention-days: 14
+      - name: Preserve experimental previews and audit on this branch only
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_v7
+          git commit -m 'Add face-only simplification and numbered proof' || exit 0
+          git pull --rebase origin art-v7-face-local-cleanup
+          git push origin HEAD:art-v7-face-local-cleanup
