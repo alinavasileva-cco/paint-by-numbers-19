@@ -1,6 +1,6 @@
 {
-  "regions_total": 834,
-  "regions_numbered": 834,
+  "regions_total": 833,
+  "regions_numbered": 833,
   "regions_without_number": 0,
   "colors_total": 19,
   "white_counted_as_paint": false,
@@ -13,7 +13,15 @@
   "vector_interiors_verified_with_clearance_mm": 0.19,
   "printed_proof_dpi": 304.8,
   "all_color_pdf_samples_match": true,
-  "outside_face_master_changed_pixels": 0,
+  "approved_face_v10_commit": "3db8b5b23149287831b5ba8fe9f3624fe24a9b5b",
+  "face_transfer_bbox_native_px": [
+    430,
+    278,
+    700,
+    557
+  ],
+  "paint_pixels_changed_outside_face": 0,
+  "under_far_eye_paint": 17,
   "v9_indexed_sha256": "6b2bae00f6088ce15b3f085d421d8a8b22a3e5af33dd02b484af7d880dedd9a1",
   "v9_preview_sha256": "10d1894112c45707542ed1e0c39dde574b0e84a9465d9710bf5fb1690099be0c"
 }

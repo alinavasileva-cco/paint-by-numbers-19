@@ -7,7 +7,6 @@ import hashlib
 from io import BytesIO
 import json
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
 import cairosvg
 import cv2
@@ -22,6 +21,7 @@ from reportlab.pdfbase.ttfonts import TTFont as PDFTrueType
 from reportlab.pdfgen import canvas
 from scipy.spatial import cKDTree
 
+from face_transfer import DETAIL_PATHS, OFFSET, PATCH, REFERENCE_SHA, SCALE, transfer_face
 from geometry import components, contacts, open_narrow_fields, region_rings, svg_paths, vectorize
 
 HERE = Path(__file__).resolve().parent
@@ -126,7 +126,7 @@ def glyph_bounds():
     return bounds, font_file
 
 
-def locate_numbers(ids, colors, boxes, unit, bounds):
+def locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing=False):
     geometry = []
     unfitted = []
     for region, (x, y, w, h, _) in enumerate(boxes[1:], start=1):
@@ -134,6 +134,10 @@ def locate_numbers(ids, colors, boxes, unit, bounds):
         left, bottom, right, top = bounds[paint]
         near_face = 445 < (x + w / 2) / SAMPLES < 693 and 325 < (y + h / 2) / SAMPLES < 550
         margin_mm = 0.33 if near_face else 0.44
+        center_x, center_y = (x + w / 2) / SAMPLES, (y + h / 2) / SAMPLES
+        eye_detail = 545 < center_x < 664 and 363 < center_y < 416 and w < 30 and h < 40
+        if detail_spacing and eye_detail:
+            margin_mm = 0.20
         half_width = int(np.ceil(((right - left) / 2 + margin_mm) / unit))
         half_height = int(np.ceil(((top - bottom) / 2 + margin_mm) / unit))
         if w < 2 * half_width + 1 or h < 2 * half_height + 1:
@@ -155,13 +159,13 @@ def locate_numbers(ids, colors, boxes, unit, bounds):
     return geometry, unfitted
 
 
-def fit_regions(indexed, rows, unit, bounds):
+def fit_regions(indexed, rows, unit, bounds, detail_spacing=False):
     """Merge a field only when its printed number cannot fit."""
     rgb = np.float32([[[0, 0, 0]] + [list(row[2]) for row in rows]]) / 255
     lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2Lab)[0]
     for iteration in range(20):
         ids, colors, boxes = components(indexed, len(rows))
-        numbered, unfitted = locate_numbers(ids, colors, boxes, unit, bounds)
+        numbered, unfitted = locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing)
         print(f"Pass {iteration + 1}: {len(numbered)} numbered, {len(unfitted)} need more space",
               flush=True)
         if not unfitted:
@@ -231,15 +235,15 @@ def sheet_artifacts(destination, rows, source_data, indexed, ids, colors, number
                + colored + "\n</g>")
 
     def details(monochrome):
-        master = ET.parse(HERE / "face_master.svg")
-        open_paths = master.findall(".//s:g[@id='open-details']/s:path",
-                                    {"s": "http://www.w3.org/2000/svg"})
         art_scale = unit * SAMPLES
-        transform = f"translate({origin[0]} {origin[1]}) scale({art_scale})"
-        paths = "".join(f'<path stroke="{("#46434A" if monochrome else path.attrib["stroke"])}" '
-                        f'd="{path.attrib["d"]}"/>' for path in open_paths)
-        return (f'<g id="open-details" transform="{transform}" fill="none" '
-                f'stroke-width="{STROKE_MM / art_scale}" stroke-linecap="round">{paths}</g>')
+        x = origin[0] + OFFSET[0] * art_scale
+        y = origin[1] + OFFSET[1] * art_scale
+        scale = SCALE * art_scale
+        pigment = "#46434A" if monochrome else "#18101B"
+        paths = "".join(f'<path d="{d}"/>' for d in DETAIL_PATHS)
+        return (f'<g id="open-details" transform="translate({x} {y}) scale({scale})" fill="none" '
+                f'stroke="{pigment}" stroke-width="{STROKE_MM / scale}" stroke-linecap="round">'
+                f'{paths}</g>')
 
     line_art = boundary + "\n" + details(True)
     (destination / "numbered-outline.svg").write_text(
@@ -317,6 +321,41 @@ def export_pdf(destination):
         combined.save(destination / "print-plates.pdf", deflate=True)
 
 
+def compile_fields(indexed, rows, unit, bounds, detail_spacing=False):
+    for attempt in range(8):
+        indexed, ids, colors, numbered = fit_regions(indexed, rows, unit, bounds, detail_spacing)
+        arcs, edge_count = vectorize(ids, SAMPLES)
+        rings = region_rings(arcs, len(numbered))
+        repaired, defects = open_narrow_fields(
+            indexed, ids, numbered, arcs, rings, unit, outer_clearance=0.19
+        )
+        print(f"Vector proof {attempt + 1}: {defects} narrow splits", flush=True)
+        if not defects:
+            return indexed, ids, colors, numbered, arcs, rings, edge_count
+        if np.array_equal(indexed, repaired):
+            raise ValueError("Some vector fields are too narrow to paint")
+        indexed = repaired
+    raise ValueError("Could not repair all narrow vector fields")
+
+
+def retain_scene_numbers(numbered, prior, ids, colors, changed):
+    """Reuse existing label positions away from the facial edit."""
+    x0, y0, x1, y1 = PATCH
+    existing = {}
+    for _, paint, x, y in prior:
+        column, row = int(x), int(y)
+        inside = ((x0 - 6)*SAMPLES <= x < (x1 + 6)*SAMPLES
+                  and (y0 - 6)*SAMPLES <= y < (y1 + 6)*SAMPLES)
+        if inside and changed[row - 10:row + 11, column - 10:column + 11].any():
+            continue
+        region = int(ids[row, column])
+        if colors[region] != paint:
+            raise ValueError("The face transfer displaced a label in the scene")
+        existing.setdefault(region, []).append((region, paint, x, y))
+    return [existing[region][0] if len(existing.get(region, ())) == 1
+            else (region, paint, x, y) for region, paint, x, y in numbered]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
@@ -327,23 +366,24 @@ def main():
     master, source_data = artistic_master(rows)
     unit = WIDTH_MM / master.shape[1]
     bounds, font_file = glyph_bounds()
-    indexed = smooth_colors(master, len(rows))
-    for attempt in range(8):
-        indexed, ids, colors, numbered = fit_regions(indexed, rows, unit, bounds)
-        arcs, edge_count = vectorize(ids, SAMPLES)
-        rings = region_rings(arcs, len(numbered))
-        repaired, defects = open_narrow_fields(
-            indexed, ids, numbered, arcs, rings, unit, outer_clearance=0.19
-        )
-        print(f"Vector proof {attempt + 1}: {defects} narrow splits", flush=True)
-        if not defects:
-            break
-        if np.array_equal(indexed, repaired):
-            raise ValueError("Some vector fields are too narrow to paint")
-        indexed = repaired
-    else:
-        raise ValueError("Could not repair all narrow vector fields")
-    source_data["vector_topology_checked_mm"] = 0.19
+
+    initial, _, _, prior, *_ = compile_fields(smooth_colors(master, len(rows)), rows, unit, bounds)
+    edited = transfer_face(initial, SAMPLES)
+    indexed, ids, colors, numbered, arcs, rings, edge_count = compile_fields(edited, rows, unit, bounds, detail_spacing=True)
+    x0, y0, x1, y1 = PATCH
+    changed = indexed != initial
+    outside = changed.copy()
+    outside[y0*SAMPLES:y1*SAMPLES, x0*SAMPLES:x1*SAMPLES] = False
+    if outside.any():
+        raise ValueError("The face transfer changed the indexed scene outside its edit area")
+    numbered = retain_scene_numbers(numbered, prior, ids, colors, changed)
+    source_data.update({
+        "vector_topology_checked_mm": .19,
+        "approved_face_v10_commit": REFERENCE_SHA,
+        "face_transfer_bbox_native_px": list(PATCH),
+        "paint_pixels_changed_inside_face": int(np.count_nonzero(changed)),
+        "paint_pixels_changed_outside_face": int(np.count_nonzero(outside)),
+    })
     sheet_artifacts(destination, rows, source_data, indexed, ids, colors, numbered,
                     unit, bounds, arcs, rings, edge_count)
     export_palette(destination, rows, font_file)
