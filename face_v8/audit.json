@@ -1,0 +1,153 @@
+{
+  "base": "face_v6/exact_previous_face/color_segmentation_review.png",
+  "edit_area_source_px": [
+    454,
+    309,
+    677,
+    515
+  ],
+  "changed_pixels_inside_edit_area": 3252,
+  "changed_pixels_outside_edit_area": 0,
+  "regions_total": 951,
+  "regions_numbered": 950,
+  "regions_without_number": 1,
+  "label_fit_failed_regions": 1,
+  "unfit_ids": [
+    481
+  ],
+  "unfit_details": [
+    {
+      "id": 481,
+      "color_number": 11,
+      "area_px": 89,
+      "bbox": [
+        631,
+        382,
+        645,
+        395
+      ]
+    }
+  ],
+  "all_regions_numbered": false,
+  "disconnected_region_ids": [],
+  "pixels_without_color_assignment": 0,
+  "font_size_pt": 5.3,
+  "contour_width_mm": 0.2,
+  "colors_in_derived_image": 19,
+  "source_png_sha256": "45568458ea941ad2151913b849d2392bd672be05c735da472fd5098fe8222f2f",
+  "original_png_unchanged": true,
+  "merge_passes": [
+    {
+      "pass": 1,
+      "before": 1081,
+      "unfit_before": 132,
+      "merged": 125,
+      "violations": [
+        {
+          "id": 457,
+          "cause": "no_compatible_neighbor",
+          "area": 19
+        },
+        {
+          "id": 1066,
+          "cause": "no_compatible_neighbor",
+          "area": 25
+        },
+        {
+          "id": 600,
+          "cause": "no_compatible_neighbor",
+          "area": 45
+        },
+        {
+          "id": 759,
+          "cause": "no_compatible_neighbor",
+          "area": 70
+        },
+        {
+          "id": 761,
+          "cause": "no_compatible_neighbor",
+          "area": 73
+        },
+        {
+          "id": 539,
+          "cause": "protect_important_eye_color_shape",
+          "area": 89
+        },
+        {
+          "id": 763,
+          "cause": "no_compatible_neighbor",
+          "area": 105
+        }
+      ]
+    },
+    {
+      "pass": 2,
+      "before": 995,
+      "unfit_before": 45,
+      "merged": 42,
+      "violations": [
+        {
+          "id": 981,
+          "cause": "no_compatible_neighbor",
+          "area": 25
+        },
+        {
+          "id": 504,
+          "cause": "protect_important_eye_color_shape",
+          "area": 89
+        },
+        {
+          "id": 693,
+          "cause": "no_compatible_neighbor",
+          "area": 120
+        }
+      ]
+    },
+    {
+      "pass": 3,
+      "before": 959,
+      "unfit_before": 9,
+      "merged": 7,
+      "violations": [
+        {
+          "id": 945,
+          "cause": "no_compatible_neighbor",
+          "area": 25
+        },
+        {
+          "id": 485,
+          "cause": "protect_important_eye_color_shape",
+          "area": 89
+        }
+      ]
+    },
+    {
+      "pass": 4,
+      "before": 953,
+      "unfit_before": 3,
+      "merged": 2,
+      "violations": [
+        {
+          "id": 482,
+          "cause": "protect_important_eye_color_shape",
+          "area": 89
+        }
+      ]
+    },
+    {
+      "pass": 5,
+      "before": 951,
+      "unfit_before": 1,
+      "merged": 0,
+      "violations": [
+        {
+          "id": 481,
+          "cause": "protect_important_eye_color_shape",
+          "area": 89
+        }
+      ]
+    }
+  ],
+  "visual_approval": "PENDING",
+  "status": "NEEDS_ART_REVIEW"
+}
