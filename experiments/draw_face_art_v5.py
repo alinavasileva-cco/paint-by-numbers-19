@@ -186,14 +186,34 @@ def local_fit_merge(work,palette,numbers,scale,masks,max_rounds=35):
         ids,rc,_=base.label_components(work,19)
         fits,centers,areas,dims,rotations=art.label_fit(ids,rc,numbers,scale)
         bad=[int(x) for x in np.flatnonzero(~fits[1:])+1]
+        mandatory_eye_core=set()
+        eye_core_report={}
+        for eye_name in ("near_eye","far_eye"):
+            zone=masks[eye_name]
+            for key in ("sclera","iris","dark"):
+                colnum=PALETTE[key]
+                this_color=[i for i in range(len(palette)) if numbers[i]==colnum][0]
+                candidate_pixels=(zone&(work==this_color))
+                candidates=np.unique(ids[candidate_pixels])
+                choices=[int(candidate) for candidate in candidates if candidate>0]
+                if not choices:
+                    raise RuntimeError(f"{eye_name}: required {key} pigment missing")
+                main=max(choices,key=lambda i:int(np.count_nonzero((ids==i)&zone)))
+                mandatory_eye_core.add(main)
+                eye_core_report[f"{eye_name}_{key}"]=main
         if not bad:
             return work,rows
         adj=art.adjacency(ids)
         selected=[]
         for rid in bad:
             patch=ids==rid
-            if np.any(patch & protected_eye):
-                raise RuntimeError(f"Hand-drawn eye pigment region {rid} cannot fit 5.3pt number; redesign eye instead of losing iris/pupil")
+            if rid in mandatory_eye_core:
+                ys,xs=np.nonzero(patch)
+                raise RuntimeError(
+                    f"Main painted eye region {rid}, pigment={numbers[int(rc[rid])]} "
+                    f"cannot fit 5.3pt; area={int(areas[rid])}, "
+                    f"bbox={(int(xs.min()),int(ys.min()),int(xs.max()),int(ys.max()))}. "
+                    f"Eye cores={eye_core_report}. Redraw geometry.")
             if not np.any(patch&editable_border):
                 yy,xx=np.nonzero(patch)
                 raise RuntimeError(f"Unnumberable region {rid} far outside face: "
