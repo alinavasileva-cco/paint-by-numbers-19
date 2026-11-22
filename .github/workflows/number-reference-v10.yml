@@ -1,0 +1,43 @@
+name: V10 Number user-approved face lineart
+on:
+  workflow_dispatch:
+  push:
+    branches: [art-v10-numbering-user-approved-lineart]
+    paths:
+      - 'experiments/number_approved_lineart_v10.py'
+      - 'face_reference_v10/approved_lineart_group4.tif'
+      - '.github/workflows/number-reference-v10.yml'
+jobs:
+  number_lineart:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install existing image processing dependencies
+        run: pip install -r requirements.txt
+      - name: Number user's approved exact-threshold contours (5.3pt)
+        run: python experiments/number_approved_lineart_v10.py
+      - name: Always save visual proof and detailed audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: approved-lineart-v10-numbering-proof
+          path: face_reference_v10/output/
+          retention-days: 30
+      - name: Publish numbered artwork and audit to this branch
+        if: success()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add face_reference_v10/output
+          if git diff --cached --quiet; then
+            echo "Output is identical to last successful proof"
+            exit 0
+          fi
+          git commit -m 'Render approved face lineart: numbered PNG SVG palette and audit'
+          git pull --rebase origin art-v10-numbering-user-approved-lineart
+          git push origin HEAD:art-v10-numbering-user-approved-lineart
