@@ -1,0 +1,58 @@
+name: Lanterns V2 - code-only smooth contours
+on:
+  push:
+    branches:
+      - art-lanterns-hachette-19-v1
+    paths:
+      - 'lanterns_hachette_19_v1/refine_v2.py'
+      - '.github/workflows/lanterns-refine-v2.yml'
+  workflow_dispatch:
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build vector lines, palettes and numbered PDF
+        run: python lanterns_hachette_19_v1/refine_v2.py
+      - name: Enforce all 19 colors and 5.3 pt labels
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('lanterns_hachette_19_v1/audit_v2.json').read_text())
+          assert d['source_file_unchanged']
+          assert d['source_sha256']=='af8f41ccffe0fa9232205e8ea0df0b0e88aa48176ddfbca6332b2d06857d5036'
+          assert d['colors']==19 and d['white_outside_palette']
+          assert d['font_pt']>=5.3 and d['stroke_mm']==0.2
+          assert d['regions']==d['numbered_regions'] and d['unlabeled_regions']==0
+          assert d['status']=='PASSED'
+          print('PASS', d['regions'], 'numbered paint areas')
+          PY
+      - name: Publish built files to this branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lanterns_hachette_19_v1/lineart_smooth_v2.svg
+          git add lanterns_hachette_19_v1/lineart_smooth_v2.pdf
+          git add lanterns_hachette_19_v1/lineart_smooth_v2.png
+          git add lanterns_hachette_19_v1/color_smooth_v2.png
+          git add lanterns_hachette_19_v1/palette_v2.csv
+          git add lanterns_hachette_19_v1/audit_v2.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish refined 19-color smooth V2 numbered artwork"
+            git push origin HEAD:art-lanterns-hachette-19-v1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lanterns-19-v2-smooth-numbered
+          path: |
+            lanterns_hachette_19_v1/*_v2.*
+          retention-days: 30
