@@ -1,0 +1,16 @@
+{
+  "source_sha256": "159d218a4f53a5e6f7676e0c621681bed8e55b06bb7d14c3de2eeca480810c72",
+  "print_size_mm": [
+    400,
+    600
+  ],
+  "colors": 19,
+  "regions_total": 973,
+  "regions_numbered": 973,
+  "regions_without_number": 0,
+  "font_size_pt": 5.3,
+  "line_width_mm": 0.2,
+  "proof_resolution_px_per_mm": 12,
+  "shared_pdf_edges_checked": 28597,
+  "color_match_at_all_number_locations": true
+}

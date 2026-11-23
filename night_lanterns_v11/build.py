@@ -127,10 +127,10 @@ def glyph_bounds():
     return bounds, font_file
 
 
-def locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing=False):
+def locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing=False, placement=None):
     geometry = []
     unfitted = []
-    for region, (x, y, w, h, _) in enumerate(boxes[1:], start=1):
+    for region, (x, y, w, h, area) in enumerate(boxes[1:], start=1):
         paint = int(colors[region])
         left, bottom, right, top = bounds[paint]
         near_face = 445 < (x + w / 2) / SAMPLES < 693 and 325 < (y + h / 2) / SAMPLES < 550
@@ -139,6 +139,11 @@ def locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing=False):
         eye_detail = 545 < center_x < 664 and 363 < center_y < 416 and w < 30 and h < 40
         if detail_spacing and eye_detail:
             margin_mm = 0.20
+        if placement is not None:
+            margin_mm, min_area_mm2 = placement(x + w / 2, y + h / 2, paint)
+            if area * unit**2 < min_area_mm2:
+                unfitted.append(region)
+                continue
         half_width = int(np.ceil(((right - left) / 2 + margin_mm) / unit))
         half_height = int(np.ceil(((top - bottom) / 2 + margin_mm) / unit))
         if w < 2 * half_width + 1 or h < 2 * half_height + 1:
@@ -160,13 +165,14 @@ def locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing=False):
     return geometry, unfitted
 
 
-def fit_regions(indexed, rows, unit, bounds, detail_spacing=False):
+def fit_regions(indexed, rows, unit, bounds, detail_spacing=False, placement=None,
+                color_distance_weight=0.051):
     """Merge a field only when its printed number cannot fit."""
     rgb = np.float32([[[0, 0, 0]] + [list(row[2]) for row in rows]]) / 255
     lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2Lab)[0]
     for iteration in range(20):
         ids, colors, boxes = components(indexed, len(rows))
-        numbered, unfitted = locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing)
+        numbered, unfitted = locate_numbers(ids, colors, boxes, unit, bounds, detail_spacing, placement)
         print(f"Pass {iteration + 1}: {len(numbered)} numbered, {len(unfitted)} need more space",
               flush=True)
         if not unfitted:
@@ -185,7 +191,8 @@ def fit_regions(indexed, rows, unit, bounds, detail_spacing=False):
             def score(contact):
                 other, shared = contact
                 difference = np.linalg.norm(pigment - lab[colors[other]])
-                return np.log1p(shared) - .051 * difference + (1.20 if other not in needs_space else 0)
+                return (np.log1p(shared) - color_distance_weight * difference
+                        + (1.20 if other not in needs_space else 0))
 
             target, _ = max(options, key=score)
             assigned[region] = colors[target]

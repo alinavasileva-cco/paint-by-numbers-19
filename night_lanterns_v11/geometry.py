@@ -91,7 +91,8 @@ def soften(points, closed, radius):
     return tuple(steps)
 
 
-def vectorize(ids, samples_per_pixel):
+def vectorize(ids, samples_per_pixel, *, detail_box=(445, 325, 693, 550),
+              smoothing_scale=1.0, preserve_frame=False):
     """Find chains of grid edges between pinned multi-region junctions."""
     height, width = ids.shape
     stride = width + 1
@@ -111,6 +112,7 @@ def vectorize(ids, samples_per_pixel):
             adjacent[second].append(first)
 
     original_edges = len(edges)
+    corners = {0, width, height * stride, height * stride + width} if preserve_frame else set()
 
     def pop_edge(first, second):
         if first < second:
@@ -121,13 +123,16 @@ def vectorize(ids, samples_per_pixel):
         return {1: 0, stride: 1, -1: 2, -stride: 3}[second - first]
 
     arcs = []
-    for start in sorted(adjacent, key=lambda vertex: len(adjacent[vertex]) == 2):
+    def through(vertex):
+        return len(adjacent[vertex]) == 2 and vertex not in corners
+
+    for start in sorted(adjacent, key=through):
         for next_node in adjacent[start]:
             if (min(start, next_node), max(start, next_node)) not in edges:
                 continue
             sides = pop_edge(start, next_node)
             nodes = [start, next_node]
-            while nodes[-1] != start and len(adjacent[nodes[-1]]) == 2:
+            while nodes[-1] != start and through(nodes[-1]):
                 previous, current = nodes[-2:]
                 a, b = adjacent[current]
                 following = a if b == previous else b
@@ -136,26 +141,34 @@ def vectorize(ids, samples_per_pixel):
                 nodes.append(following)
 
             points = np.asarray([(node % stride, node // stride) for node in nodes], np.float32)
-            closed = nodes[-1] == start and len(adjacent[start]) == 2
+            closed = nodes[-1] == start and through(start)
             center_x, center_y = points.mean(axis=0) / samples_per_pixel
-            face = 445 < center_x < 693 and 325 < center_y < 550
+            x0, y0, x1, y1 = detail_box
+            detail = x0 < center_x < x1 and y0 < center_y < y1
+            pixel_scale = samples_per_pixel * smoothing_scale
+            if preserve_frame and 0 in sides:
+                start_direction = direction(*nodes[:2])
+                end_direction = direction(*nodes[-2:])
+                segment = Segment(tuple(points[0]), tuple(points[-1]))
+                arcs.append(Arc(start, nodes[-1], *sides, start_direction, end_direction, (segment,)))
+                continue
             if closed:
                 points = points[:-1]
             if len(points) > 7:
-                sigma = (1.20 if face else 1.75) * samples_per_pixel
+                sigma = (1.20 if detail else 1.75) * pixel_scale
                 filtered = gaussian_filter1d(points, sigma, axis=0, mode="wrap" if closed else "nearest")
                 if not closed:
                     distances = np.minimum(np.arange(len(points)), np.arange(len(points) - 1, -1, -1))
                     blend = np.minimum(distances[:, None] / (2 * sigma), 1)
                     filtered = np.float32(points + blend * (filtered - points))
                 points = filtered
-            tolerance = (0.67 if face else 0.92) * samples_per_pixel
+            tolerance = (0.67 if detail else 0.92) * pixel_scale
             simplified = cv2.approxPolyDP(points[:, None], tolerance, closed).reshape(-1, 2)
             if not closed:
                 simplified[0], simplified[-1] = points[0], points[-1]
             if len(simplified) < (3 if closed else 2):
                 simplified = points
-            segments = soften(simplified, closed, (2.00 if face else 3.00) * samples_per_pixel)
+            segments = soften(simplified, closed, (2.00 if detail else 3.00) * pixel_scale)
             arcs.append(Arc(start, nodes[-1], *sides,
                             direction(*nodes[:2]), direction(*nodes[-2:]), segments))
 
