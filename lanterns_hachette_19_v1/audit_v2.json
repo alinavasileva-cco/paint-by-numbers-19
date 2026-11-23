@@ -1,0 +1,28 @@
+{
+  "source_sha256": "af8f41ccffe0fa9232205e8ea0df0b0e88aa48176ddfbca6332b2d06857d5036",
+  "source_file_unchanged": true,
+  "colors": 19,
+  "white_outside_palette": true,
+  "font_pt": 5.3,
+  "stroke_mm": 0.2,
+  "regions": 954,
+  "numbered_regions": 954,
+  "unlabeled_regions": 0,
+  "restored_iris_pixels": 881,
+  "final_changed_pixels_vs_previous": 911,
+  "chain_count": 2146,
+  "number_fitting_passes": [
+    {
+      "pass": 0,
+      "regions": 956,
+      "not_fitting": 2
+    },
+    {
+      "pass": 1,
+      "regions": 954,
+      "not_fitting": 0
+    }
+  ],
+  "geometry": "shared boundaries, gaussian/subpixel smoothing; hard edges preserved on buildings/lanterns",
+  "status": "PASSED"
+}
