@@ -1,0 +1,16 @@
+{
+  "stage": "COLOR_FOR_APPROVAL",
+  "source_sha256": "e829c5e3135d1fb95b3822b1f18c3d7e2db1dbb44a05b618b1c98944972728d5",
+  "paint_count": 19,
+  "field_count": 823,
+  "fields_with_room_at_5_3_pt": 823,
+  "art_width_mm_for_fit_check": 388,
+  "trace_checked_with_clearance_mm": 0.19,
+  "shared_grid_edges": 256142,
+  "far_eye_within_drawn_face": true,
+  "far_eye_paints_retained": [
+    1,
+    16,
+    19
+  ]
+}
